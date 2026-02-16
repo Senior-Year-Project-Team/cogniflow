@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniFlow - Practice Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .test-container {
+            background: white;
+            border: 1px solid #d1d1d1;
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #003d7a;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .trial-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .trial-info strong {
+            color: #003d7a;
+        }
+
+        .status-message {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 30px;
+            min-height: 30px;
+        }
+
+        /* Stimulus Display Area */
+        .stimulus-display {
+            background: #f9f9f9;
+            border: 2px solid #003d7a;
+            padding: 60px 40px;
+            margin: 30px 0;
+            border-radius: 3px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stimulus-sequence {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #003d7a;
+            letter-spacing: 20px;
+            display: none;
+        }
+
+        .stimulus-sequence.active {
+            display: block;
+        }
+
+        /* Response Buttons */
+        .response-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            display: none;
+        }
+
+        .response-grid.active {
+            display: grid;
+        }
+
+        .response-button {
+            padding: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: white;
+            border: 2px solid #003d7a;
+            color: #003d7a;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .response-button:hover {
+            background: #e6f2ff;
+        }
+
+        .response-button:active {
+            transform: scale(0.95);
+        }
+
+        .response-button.selected {
+            background: #003d7a;
+            color: white;
+        }
+
+        .response-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* User Response Display */
+        .user-response {
+            font-size: 1.2rem;
+            color: #333;
+            margin: 20px 0;
+            min-height: 40px;
+        }
+
+        .user-response strong {
+            color: #003d7a;
+        }
+
+        /* Feedback */
+        .feedback {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback.active {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .feedback-detail {
+            font-size: 0.95rem;
+            font-weight: normal;
+            margin-top: 10px;
+        }
+
+        /* Action Buttons */
+        .action-button {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: #003d7a;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 10px 5px;
+            display: none;
+        }
+
+        .action-button.active {
+            display: inline-block;
+        }
+
+        .action-button:hover {
+            background: #002d5a;
+        }
+
+        .action-button.secondary {
+            background: #6c757d;
+        }
+
+        .action-button.secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .test-container {
+                padding: 30px 20px;
+            }
+
+            .stimulus-sequence {
+                font-size: 2rem;
+                letter-spacing: 15px;
+            }
+
+            .response-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .response-button {
+                padding: 20px;
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .response-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stimulus-sequence {
+                font-size: 1.5rem;
+                letter-spacing: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <!-- Trial Information -->
+        <div class="trial-info">
+            <span id="trial-counter">Practice Trial <strong id="current-trial">1</strong> of <strong id="total-trials">3</strong></span>
+        </div>
+
+        <!-- Status Message -->
+        <div class="status-message" id="status-message">
+            <span id="status-text">Get ready...</span>
+        </div>
+
+        <!-- Stimulus Display -->
+        <div class="stimulus-display">
+            <div class="stimulus-sequence" id="stimulus"></div>
+        </div>
+
+        <!-- User Response Display -->
+        <div class="user-response" id="user-response"></div>
+
+        <!-- Response Grid -->
+        <div class="response-grid" id="response-grid">
+            <!-- Buttons will be dynamically generated -->
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback" id="feedback">
+            <div id="feedback-message"></div>
+            <div class="feedback-detail" id="feedback-detail"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <button class="action-button" id="submit-btn">Submit Response</button>
+        <button class="action-button" id="next-btn">Next Trial</button>
+        <button class="action-button" id="finish-btn">Continue to Test</button>
+    </div>
+
+    <script>
+        // Get language from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const language = urlParams.get('lang') || 'en';
+
+        // Practice trials configuration
+        const practiceTrials = [
+            { sequence: ['3', '7', '1'], type: 'digit' },
+            { sequence: ['B', 'K', 'R'], type: 'letter' },
+            { sequence: ['5', 'A', '9', 'C'], type: 'mixed' }
+        ];
+
+        // Available symbols for responses
+        const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const letterSymbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M', 'N', 'R', 'S', 'T'];
+
+        // Test state
+        let currentTrialIndex = 0;
+        let userResponse = [];
+        let startTime = null;
+        let responseTime = null;
+
+        // Translations
+        const translations = {
+            en: {
+                trialCounter: "Practice Trial",
+                of: "of",
+                getReady: "Get ready...",
+                watchAndListen: "Watch and listen carefully...",
+                nowRespond: "Now click the symbols in order:",
+                yourResponse: "Your response:",
+                correct: "Correct!",
+                incorrect: "Incorrect",
+                correctSequence: "The correct sequence was:",
+                submit: "Submit Response",
+                nextTrial: "Next Trial",
+                continueToTest: "Continue to Test"
+            },
+            es: {
+                trialCounter: "Prueba de Práctica",
+                of: "de",
+                getReady: "Prepárese...",
+                watchAndListen: "Observe y escuche con atención...",
+                nowRespond: "Ahora haga clic en los símbolos en orden:",
+                yourResponse: "Su respuesta:",
+                correct: "¡Correcto!",
+                incorrect: "Incorrecto",
+                correctSequence: "La secuencia correcta era:",
+                submit: "Enviar Respuesta",
+                nextTrial: "Siguiente Prueba",
+                continueToTest: "Continuar a la Prueba"
+            }
+        };
+
+        const t = translations[language];
+
+        // Update text elements
+        document.getElementById('trial-counter').innerHTML = `${t.trialCounter} <strong id="current-trial">1</strong> ${t.of} <strong id="total-trials">3</strong>`;
+        document.getElementById('submit-btn').textContent = t.submit;
+        document.getElementById('next-btn').textContent = t.nextTrial;
+        document.getElementById('finish-btn').textContent = t.continueToTest;
+
+        // Initialize test
+        function initTest() {
+            setTimeout(() => {
+                startTrial();
+            }, 1500);
+        }
+
+        // Start a trial
+        function startTrial() {
+            const trial = practiceTrials[currentTrialIndex];
+            userResponse = [];
+            
+            // Update progress
+            const progress = ((currentTrialIndex + 1) / practiceTrials.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+            
+            // Update trial counter
+            document.getElementById('current-trial').textContent = currentTrialIndex + 1;
+            
+            // Reset display
+            document.getElementById('status-text').textContent = t.watchAndListen;
+            document.getElementById('stimulus').classList.remove('active');
+            document.getElementById('response-grid').classList.remove('active');
+            document.getElementById('user-response').textContent = '';
+            document.getElementById('feedback').classList.remove('active', 'correct', 'incorrect');
+            hideAllButtons();
+            
+            // Show stimulus after delay
+            setTimeout(() => {
+                showStimulus(trial.sequence);
+            }, 1000);
+        }
+
+        // Show stimulus
+        function showStimulus(sequence) {
+            const stimulusEl = document.getElementById('stimulus');
+            stimulusEl.textContent = sequence.join(' - ');
+            stimulusEl.classList.add('active');
+            
+            // Simulate audio (in real implementation, would use Web Speech API)
+            // playAudio(sequence);
+            
+            // Hide stimulus and show response grid
+            setTimeout(() => {
+                stimulusEl.classList.remove('active');
+                showResponseGrid(practiceTrials[currentTrialIndex].type);
+            }, sequence.length * 1000 + 1000);
+        }
+
+        // Show response grid
+        function showResponseGrid(type) {
+            document.getElementById('status-text').textContent = t.nowRespond;
+            
+            let symbols;
+            if (type === 'digit') {
+                symbols = digitSymbols;
+            } else if (type === 'letter') {
+                symbols = letterSymbols;
+            } else { // mixed
+                symbols = [...digitSymbols, ...letterSymbols].sort();
+            }
+            
+            const grid = document.getElementById('response-grid');
+            grid.innerHTML = '';
+            
+            symbols.forEach(symbol => {
+                const button = document.createElement('button');
+                button.className = 'response-button';
+                button.textContent = symbol;
+                button.onclick = () => selectSymbol(symbol, button);
+                grid.appendChild(button);
+            });
+            
+            grid.classList.add('active');
+            document.getElementById('submit-btn').classList.add('active');
+            
+            // Start timing
+            startTime = Date.now();
+        }
+
+        // Select symbol
+        function selectSymbol(symbol, button) {
+            userResponse.push(symbol);
+            button.classList.add('selected');
+            button.disabled = true;
+            
+            // Update display
+            document.getElementById('user-response').innerHTML = 
+                `<strong>${t.yourResponse}</strong> ${userResponse.join(' - ')}`;
+        }
+
+        // Submit response
+        document.getElementById('submit-btn').onclick = function() {
+            if (userResponse.length === 0) return;
+            
+            responseTime = Date.now() - startTime;
+            
+            // Disable all buttons
+            const buttons = document.querySelectorAll('.response-button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            this.classList.remove('active');
+            
+            // Check answer
+            checkAnswer();
+        };
+
+        // Check answer
+        function checkAnswer() {
+            const correctSequence = practiceTrials[currentTrialIndex].sequence;
+            const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctSequence);
+            
+            const feedbackEl = document.getElementById('feedback');
+            const messageEl = document.getElementById('feedback-message');
+            const detailEl = document.getElementById('feedback-detail');
+            
+            if (isCorrect) {
+                feedbackEl.classList.add('active', 'correct');
+                messageEl.textContent = t.correct;
+                detailEl.textContent = '';
+            } else {
+                feedbackEl.classList.add('active', 'incorrect');
+                messageEl.textContent = t.incorrect;
+                detailEl.textContent = `${t.correctSequence} ${correctSequence.join(' - ')}`;
+            }
+            
+            // Show appropriate next button
+            if (currentTrialIndex < practiceTrials.length - 1) {
+                document.getElementById('next-btn').classList.add('active');
+            } else {
+                document.getElementById('finish-btn').classList.add('active');
+            }
+        }
+
+        // Next trial
+        document.getElementById('next-btn').onclick = function() {
+            currentTrialIndex++;
+            this.classList.remove('active');
+            startTrial();
+        };
+
+        // Finish practice
+        document.getElementById('finish-btn').onclick = function() {
+            window.location.href = '/test/actual?lang=' + language;
+        };
+
+        // Helper functions
+        function hideAllButtons() {
+            document.getElementById('submit-btn').classList.remove('active');
+            document.getElementById('next-btn').classList.remove('active');
+            document.getElementById('finish-btn').classList.remove('active');
+        }
+
+        // Start the test
+        initTest();
+    </script>
+</body>
+</html>
