@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniFlow - Patient Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border: 1px solid #d1d1d1;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 40px;
+        }
+
+        .logo {
+            border-bottom: 2px solid #003d7a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #003d7a;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .welcome-text {
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h2 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .welcome-text p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.95rem;
+            background: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #003d7a;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 12px;
+            background: #003d7a;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .start-button:hover {
+            background: #002d5a;
+        }
+
+        .start-button:active {
+            background: #001d3a;
+        }
+
+        .privacy-note {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #003d7a;
+        }
+
+        .privacy-note p {
+            color: #555;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .privacy-note strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px auto;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo and Branding -->
+        <div class="logo">
+            <h1>CogniFlow</h1>
+            <p>Philadelphia Pointing Span Test</p>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="welcome-text">
+            <h2 id="welcome-title">Welcome to Your Assessment</h2>
+            <p id="welcome-description">Please configure your preferences before beginning the test.</p>
+        </div>
+
+        <!-- Configuration Form -->
+        <form id="patient-config-form" action="/test/start" method="POST">
+            <!-- Language Selection -->
+            <div class="form-group">
+                <label for="language" id="label-language">Test Language</label>
+                <select id="language" name="language" required>
+                    <option value="en">English</option>
+                    <option value="es">Español (Spanish)</option>
+                </select>
+            </div>
+
+            <!-- Age Input -->
+            <div class="form-group">
+                <label for="age" id="label-age">Age</label>
+                <input type="number" id="age" name="age" min="1" max="120" required placeholder="Enter your age">
+            </div>
+
+            <!-- Start Button -->
+            <button type="submit" class="start-button" id="start-button">Begin Assessment</button>
+        </form>
+
+        <!-- Privacy Notice -->
+        <div class="privacy-note">
+            <p><strong id="privacy-title">Privacy Notice</strong></p>
+            <p id="privacy-text">Your privacy is protected. This assessment is completely anonymous and collects no personally identifiable information.</p>
+        </div>
+    </div>
+
+    <script>
+        // Multi-language support
+        const translations = {
+            en: {
+                welcomeTitle: "Welcome to Your Assessment",
+                welcomeDescription: "Please configure your preferences before beginning the test.",
+                labelLanguage: "Test Language",
+                labelAge: "Age",
+                startButton: "Begin Assessment",
+                privacyTitle: "Privacy Notice",
+                privacyText: "Your privacy is protected. This assessment is completely anonymous and collects no personally identifiable information.",
+                agePlaceholder: "Enter your age"
+            },
+            es: {
+                welcomeTitle: "Bienvenido a Su Evaluación",
+                welcomeDescription: "Por favor configure sus preferencias antes de comenzar la prueba.",
+                labelLanguage: "Idioma de la Prueba",
+                labelAge: "Edad",
+                startButton: "Comenzar Evaluación",
+                privacyTitle: "Aviso de Privacidad",
+                privacyText: "Su privacidad está protegida. Esta evaluación es completamente anónima y no recopila información de identificación personal.",
+                agePlaceholder: "Ingrese su edad"
+            }
+        };
+
+        // Language switcher
+        document.getElementById('language').addEventListener('change', function() {
+            const lang = this.value;
+            const t = translations[lang];
+            
+            document.getElementById('welcome-title').textContent = t.welcomeTitle;
+            document.getElementById('welcome-description').textContent = t.welcomeDescription;
+            document.getElementById('label-language').textContent = t.labelLanguage;
+            document.getElementById('label-age').textContent = t.labelAge;
+            document.getElementById('start-button').textContent = t.startButton;
+            document.getElementById('privacy-title').textContent = t.privacyTitle;
+            document.getElementById('privacy-text').textContent = t.privacyText;
+            document.getElementById('age').placeholder = t.agePlaceholder;
+        });
+
+        // Form validation
+        document.getElementById('patient-config-form').addEventListener('submit', function(e) {
+            const age = document.getElementById('age').value;
+            if (age < 1 || age > 120) {
+                e.preventDefault();
+                alert('Please enter a valid age between 1 and 120.');
+            }
+        });
+    </script>
+</body>
+</html>
