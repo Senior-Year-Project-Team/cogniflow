@@ -387,14 +387,28 @@
             stimulusEl.textContent = sequence.join(' - ');
             stimulusEl.classList.add('active');
             
-            // Simulate audio (in real implementation, would use Web Speech API or audio files)
-            // playAudio(sequence);
+            // Play audio for each symbol in sequence
+            playAudioSequence(sequence);
             
             // Hide stimulus and show response grid
             setTimeout(() => {
                 stimulusEl.classList.remove('active');
                 showResponseGrid(testTrials[currentTrialIndex].type);
             }, sequence.length * 1000 + 1000);
+        }
+
+        // Play audio sequence using Web Speech API
+        function playAudioSequence(sequence) {
+            if ('speechSynthesis' in window) {
+                sequence.forEach((symbol, index) => {
+                    setTimeout(() => {
+                        const utterance = new SpeechSynthesisUtterance(symbol);
+                        utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
+                        utterance.rate = 0.8; // Slightly slower for clarity
+                        speechSynthesis.speak(utterance);
+                    }, index * 1000);
+                });
+            }
         }
 
         // Show response grid
@@ -431,6 +445,14 @@
             userResponse.push(symbol);
             button.classList.add('selected');
             button.disabled = true;
+            
+            // Auditory feedback - speak the selected symbol
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(symbol);
+                utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
             
             // Update display
             document.getElementById('user-response').innerHTML = 
