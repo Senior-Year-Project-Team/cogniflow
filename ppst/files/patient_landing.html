@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniFlow - Patient Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border: 1px solid #d1d1d1;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 40px;
+        }
+
+        .logo {
+            border-bottom: 2px solid #003d7a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #003d7a;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .welcome-text {
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h2 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .welcome-text p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.95rem;
+            background: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #003d7a;
+        }
+
+        .voice-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .voice-option {
+            flex: 1;
+        }
+
+        .voice-option input[type="radio"] {
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .voice-option label {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fafafa;
+            cursor: pointer;
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        .voice-option input[type="radio"]:checked + label {
+            background: #e6f2ff;
+            border-color: #003d7a;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 12px;
+            background: #003d7a;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .start-button:hover {
+            background: #002d5a;
+        }
+
+        .start-button:active {
+            background: #001d3a;
+        }
+
+        .privacy-note {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #003d7a;
+        }
+
+        .privacy-note p {
+            color: #555;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .privacy-note strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px auto;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .voice-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo and Branding -->
+        <div class="logo">
+            <h1>CogniFlow</h1>
+            <p>Philadelphia Pointing Span Test</p>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="welcome-text">
+            <h2 id="welcome-title">Welcome to Your Assessment</h2>
+            <p id="welcome-description">Please configure your preferences before beginning the test.</p>
+        </div>
+
+        <!-- Configuration Form -->
+        <form id="patient-config-form" action="/test/instructions" method="POST">
+            <!-- Language Selection -->
+            <div class="form-group">
+                <label for="language" id="label-language">Test Language</label>
+                <select id="language" name="language" required>
+                    <option value="en">English</option>
+                    <option value="es">Español (Spanish)</option>
+                </select>
+            </div>
+
+            <!-- Date of Birth Input -->
+            <div class="form-group">
+                <label for="dob" id="label-dob">Date of Birth</label>
+                <input type="text" id="dob" name="dob" required placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}" maxlength="10">
+            </div>
+
+            <!-- Voice Selection -->
+            <div class="form-group">
+                <label id="label-voice">Audio Voice</label>
+                <div class="voice-options">
+                    <div class="voice-option">
+                        <input type="radio" id="voice-male" name="voice" value="male" checked>
+                        <label for="voice-male" id="label-voice-male">Male</label>
+                    </div>
+                    <div class="voice-option">
+                        <input type="radio" id="voice-female" name="voice" value="female">
+                        <label for="voice-female" id="label-voice-female">Female</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <button type="submit" class="start-button" id="start-button">Begin Assessment</button>
+        </form>
+
+        <!-- Privacy Notice -->
+        <div class="privacy-note">
+            <p><strong id="privacy-title">Privacy Notice</strong></p>
+            <p id="privacy-text">Your privacy is protected. This assessment is completely anonymous and collects no personally identifiable information.</p>
+        </div>
+    </div>
+
+    <script>
+        // Multi-language support
+        const translations = {
+            en: {
+                welcomeTitle: "Welcome to Your Assessment",
+                welcomeDescription: "Please configure your preferences before beginning the test.",
+                labelLanguage: "Test Language",
+                labelDob: "Date of Birth",
+                labelVoice: "Audio Voice",
+                labelVoiceMale: "Male",
+                labelVoiceFemale: "Female",
+                startButton: "Begin Assessment",
+                privacyTitle: "Privacy Notice",
+                privacyText: "Your privacy is protected. This assessment is completely anonymous and collects no personally identifiable information.",
+                dobPlaceholder: "MM/DD/YYYY"
+            },
+            es: {
+                welcomeTitle: "Bienvenido a Su Evaluación",
+                welcomeDescription: "Por favor configure sus preferencias antes de comenzar la prueba.",
+                labelLanguage: "Idioma de la Prueba",
+                labelDob: "Fecha de Nacimiento",
+                labelVoice: "Voz de Audio",
+                labelVoiceMale: "Masculino",
+                labelVoiceFemale: "Femenino",
+                startButton: "Comenzar Evaluación",
+                privacyTitle: "Aviso de Privacidad",
+                privacyText: "Su privacidad está protegida. Esta evaluación es completamente anónima y no recopila información de identificación personal.",
+                dobPlaceholder: "MM/DD/AAAA"
+            }
+        };
+
+        // Language switcher
+        document.getElementById('language').addEventListener('change', function() {
+            const lang = this.value;
+            const t = translations[lang];
+            
+            document.getElementById('welcome-title').textContent = t.welcomeTitle;
+            document.getElementById('welcome-description').textContent = t.welcomeDescription;
+            document.getElementById('label-language').textContent = t.labelLanguage;
+            document.getElementById('label-dob').textContent = t.labelDob;
+            document.getElementById('label-voice').textContent = t.labelVoice;
+            document.getElementById('label-voice-male').textContent = t.labelVoiceMale;
+            document.getElementById('label-voice-female').textContent = t.labelVoiceFemale;
+            document.getElementById('start-button').textContent = t.startButton;
+            document.getElementById('privacy-title').textContent = t.privacyTitle;
+            document.getElementById('privacy-text').textContent = t.privacyText;
+            document.getElementById('dob').placeholder = t.dobPlaceholder;
+        });
+
+        // Auto-format DOB input as user types
+        document.getElementById('dob').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            }
+            if (value.length >= 5) {
+                value = value.slice(0, 5) + '/' + value.slice(5, 9);
+            }
+            
+            e.target.value = value;
+        });
+
+        // Form validation
+        document.getElementById('patient-config-form').addEventListener('submit', function(e) {
+            const dob = document.getElementById('dob').value;
+            const dobRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+            
+            if (!dobRegex.test(dob)) {
+                e.preventDefault();
+                alert('Please enter a valid date of birth in MM/DD/YYYY format.');
+                return;
+            }
+            
+            // Validate date is not in the future
+            const parts = dob.split('/');
+            const dobDate = new Date(parts[2], parts[0] - 1, parts[1]);
+            const today = new Date();
+            
+            if (dobDate > today) {
+                e.preventDefault();
+                alert('Date of birth cannot be in the future.');
+            }
+        });
+    </script>
+</body>
+</html>

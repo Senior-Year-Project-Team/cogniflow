@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniFlow - Test Instructions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border: 1px solid #d1d1d1;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 40px;
+        }
+
+        .header {
+            border-bottom: 2px solid #003d7a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #003d7a;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .instructions {
+            margin-bottom: 30px;
+        }
+
+        .instructions h2 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .instructions p {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .steps {
+            background: #f9f9f9;
+            border-left: 4px solid #003d7a;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .steps h3 {
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .steps ol {
+            margin-left: 20px;
+        }
+
+        .steps li {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .steps li strong {
+            color: #003d7a;
+        }
+
+        .example-box {
+            background: #e6f2ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+
+        .example-box h4 {
+            color: #003d7a;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .example-box p {
+            color: #333;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+
+        .important-note {
+            background: #fff9e6;
+            border: 1px solid #ffd966;
+            border-left: 4px solid #ff9900;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .important-note p {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .important-note strong {
+            color: #cc6600;
+        }
+
+        .button-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .start-practice-button {
+            padding: 14px 40px;
+            background: #003d7a;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .start-practice-button:hover {
+            background: #002d5a;
+        }
+
+        .start-practice-button:active {
+            background: #001d3a;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px auto;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .instructions h2 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 id="header-title">CogniFlow</h1>
+            <p id="header-subtitle">Philadelphia Pointing Span Test - Instructions</p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h2 id="instructions-title">How This Test Works</h2>
+            <p id="instructions-intro">
+                You will be presented with sequences of numbers and letters. Your task is to remember these sequences and respond by clicking on them in the correct order.
+            </p>
+
+            <div class="steps">
+                <h3 id="steps-title">What to Expect:</h3>
+                <ol>
+                    <li id="step-1"><strong>Watch and Listen:</strong> A sequence of numbers or letters will appear on screen and be read aloud to you.</li>
+                    <li id="step-2"><strong>Remember:</strong> Pay close attention and remember the sequence you see and hear.</li>
+                    <li id="step-3"><strong>Respond:</strong> After the sequence is presented, click on the symbols in the order shown.</li>
+                    <li id="step-4"><strong>Feedback:</strong> During practice, you will receive feedback on your responses.</li>
+                </ol>
+            </div>
+
+            <div class="example-box">
+                <h4 id="example-title">Example:</h4>
+                <p id="example-shown"><strong>Sequence shown:</strong> 5 - 2 - 8</p>
+                <p id="example-response"><strong>Your response:</strong> Click 5, then 2, then 8</p>
+            </div>
+
+            <div class="important-note">
+                <p id="note-test"><strong>Test Information:</strong> You will complete 12 test trials. These trials will be scored. Take your time and do your best.</p>
+            </div>
+
+            <p id="instructions-ready">
+                Click the button below when you are ready to begin the test.
+            </p>
+        </div>
+
+        <!-- Start Button -->
+        <div class="button-container">
+            <button class="start-practice-button" id="start-practice-btn" onclick="window.location.href='/test/actual'">
+                <span id="btn-text">Start Test</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Multi-language support
+        const urlParams = new URLSearchParams(window.location.search);
+        const language = urlParams.get('lang') || 'en';
+
+        const translations = {
+            en: {
+                headerTitle: "CogniFlow",
+                headerSubtitle: "Philadelphia Pointing Span Test - Instructions",
+                instructionsTitle: "How This Test Works",
+                instructionsIntro: "You will be presented with sequences of numbers and letters. Your task is to remember these sequences and respond by clicking on them in the correct order.",
+                stepsTitle: "What to Expect:",
+                step1: "<strong>Watch and Listen:</strong> A sequence of numbers or letters will appear on screen one at a time and be read aloud to you.",
+                step2: "<strong>Remember:</strong> Pay close attention and remember the sequence you see and hear.",
+                step3: "<strong>Respond:</strong> After the sequence is presented, click on the symbols in the order shown.",
+                step4: "<strong>Feedback:</strong> You will receive visual and auditory feedback for each selection.",
+                exampleTitle: "Example:",
+                exampleShown: "<strong>Sequence shown:</strong> 5 - 2 - 8",
+                exampleResponse: "<strong>Your response:</strong> Click 5, then 2, then 8",
+                noteTest: "<strong>Test Information:</strong> You will complete 12 test trials. These trials will be scored. Take your time and do your best.",
+                instructionsReady: "Click the button below when you are ready to begin the test.",
+                btnText: "Start Test"
+            },
+            es: {
+                headerTitle: "CogniFlow",
+                headerSubtitle: "Prueba de Amplitud de Señalamiento de Filadelfia - Instrucciones",
+                instructionsTitle: "Cómo Funciona Esta Prueba",
+                instructionsIntro: "Se le presentarán secuencias de números y letras. Su tarea es recordar estas secuencias y responder haciendo clic en ellas en el orden correcto.",
+                stepsTitle: "Qué Esperar:",
+                step1: "<strong>Observar y Escuchar:</strong> Una secuencia de números o letras aparecerá en la pantalla uno a la vez y se leerá en voz alta.",
+                step2: "<strong>Recordar:</strong> Preste mucha atención y recuerde la secuencia que ve y escucha.",
+                step3: "<strong>Responder:</strong> Después de presentar la secuencia, haga clic en los símbolos en el orden mostrado.",
+                step4: "<strong>Retroalimentación:</strong> Recibirá retroalimentación visual y auditiva para cada selección.",
+                exampleTitle: "Ejemplo:",
+                exampleShown: "<strong>Secuencia mostrada:</strong> 5 - 2 - 8",
+                exampleResponse: "<strong>Su respuesta:</strong> Haga clic en 5, luego 2, luego 8",
+                noteTest: "<strong>Información de la Prueba:</strong> Completará 12 pruebas. Estas pruebas serán calificadas. Tómese su tiempo y haga lo mejor que pueda.",
+                instructionsReady: "Haga clic en el botón de abajo cuando esté listo para comenzar la prueba.",
+                btnText: "Comenzar Prueba"
+            }
+        };
+
+        // Apply translations
+        const t = translations[language];
+        document.getElementById('header-title').textContent = t.headerTitle;
+        document.getElementById('header-subtitle').textContent = t.headerSubtitle;
+        document.getElementById('instructions-title').textContent = t.instructionsTitle;
+        document.getElementById('instructions-intro').textContent = t.instructionsIntro;
+        document.getElementById('steps-title').textContent = t.stepsTitle;
+        document.getElementById('step-1').innerHTML = t.step1;
+        document.getElementById('step-2').innerHTML = t.step2;
+        document.getElementById('step-3').innerHTML = t.step3;
+        document.getElementById('step-4').innerHTML = t.step4;
+        document.getElementById('example-title').textContent = t.exampleTitle;
+        document.getElementById('example-shown').innerHTML = t.exampleShown;
+        document.getElementById('example-response').innerHTML = t.exampleResponse;
+        document.getElementById('note-test').innerHTML = t.noteTest;
+        document.getElementById('instructions-ready').textContent = t.instructionsReady;
+        document.getElementById('btn-text').textContent = t.btnText;
+
+        // Update button link with language parameter
+        document.getElementById('start-practice-btn').onclick = function() {
+            window.location.href = '/test/actual?lang=' + language;
+        };
+    </script>
+</body>
+</html>
