@@ -194,7 +194,8 @@
         </div>
 
         <!-- Configuration Form -->
-        <form id="patient-config-form" action="/test/instructions" method="POST">
+        <form id="patient-config-form" action="{% url 'test_instructions' %}" method="POST">
+            {% csrf_token %}
             <!-- Language Selection -->
             <div class="form-group">
                 <label for="language" id="label-language">Test Language</label>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPST Clinician Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .dashboard-shell {
+            background: white;
+            border: 1px solid #d1d1d1;
+            max-width: 1100px;
+            margin: 20px auto;
+        }
+        .navbar {
+            color: #003d7a;
+            padding: 30px 35px 20px;
+            border-bottom: 2px solid #003d7a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        .navbar .subtitle {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .container {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            border-right: 1px solid #d1d1d1;
+            padding: 2rem 0;
+            background: #fafafa;
+        }
+        .sidebar a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+        }
+        .sidebar a:hover {
+            background-color: #f0f6ff;
+            border-left-color: #003d7a;
+            color: #003d7a;
+        }
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        .card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 3px;
+        }
+        .card h2 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        .card p {
+            color: #666;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .metric {
+            border: 1px solid #d9d9d9;
+            border-radius: 3px;
+            padding: 1rem;
+            background: #fafafa;
+        }
+        .metric h3 {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 0.4rem;
+        }
+        .metric .value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #003d7a;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .field-group {
+            margin-top: 0.85rem;
+        }
+        .field-label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            font-size: 0.9rem;
+        }
+        .field-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            color: #444;
+            background: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            border: none;
+            border-radius: 3px;
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .btn-primary {
+            background: #003d7a;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #002d5a;
+        }
+        .btn-secondary {
+            background: #f2f2f2;
+            color: #555;
+            border: 1px solid #ccc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.8rem;
+            border: 1px solid #ddd;
+        }
+        th, td {
+            border-bottom: 1px solid #e5e5e5;
+            text-align: left;
+            padding: 0.7rem 0.5rem;
+            font-size: 0.9rem;
+        }
+        th {
+            color: #333;
+            font-weight: 700;
+            background: #f7f7f7;
+        }
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                display: block;
+                padding: 0.5rem 0;
+                border-right: none;
+                border-bottom: 1px solid #d1d1d1;
+            }
+            .sidebar a {
+                padding: 0.7rem 1rem;
+            }
+            .navbar {
+                padding: 25px 20px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-shell">
+        <div class="navbar">
+            <h1>Clinician Dashboard</h1>
+            <div class="subtitle">Philadelphia Pointing Span Test</div>
+        </div>
+        
+        <div class="container">
+            <div class="sidebar">
+                <a href="#overview">Overview</a>
+                <a href="#administer">Administer Test</a>
+                <a href="#results">Scored Results</a>
+                <a href="#exports">Exports</a>
+            </div>
+            
+            <div class="main-content">
+                <div class="card" id="overview">
+                    <h2>Test Performance Overview</h2>
+                    <p>This dashboard displays PPST test outcomes using anonymized patient records. Raw data include item responses and response latencies. Derived outcomes include scoring measures such as correct response percentage.</p>
+                    <div class="grid">
+                        <div class="metric">
+                            <h3>Total Tests Completed</h3>
+                            <div class="value">{{ total_tests|default:"0" }}</div>
+                        </div>
+                        <div class="metric">
+                            <h3>Mean Correct Response %</h3>
+                            <div class="value">{{ mean_correct_percent|default:"0" }}%</div>
+                        </div>
+                        <div class="metric">
+                            <h3>Mean Response Latency</h3>
+                            <div class="value">{{ mean_latency_ms|default:"0" }} ms</div>
+                        </div>
+                        <div class="metric">
+                            <h3>Age Brackets Reported</h3>
+                            <div class="value">{{ age_bracket_count|default:"0" }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="administer">
+                    <h2>Administer New Test</h2>
+                    <p>Share the patient access link below so a patient can start the PPST session you administer.</p>
+                    <div class="field-group">
+                        <label class="field-label" for="patient-link">Patient Access Link</label>
+                        <input class="field-input" id="patient-link" type="text" value="{{ patient_access_link|default:'' }}" readonly>
+                    </div>
+                    <div class="actions">
+                        <a class="btn btn-primary" href="{% url 'patient_access' %}" target="_blank" rel="noopener">Open Patient Access Page</a>
+                        <button class="btn btn-secondary" type="button" id="copy-link-btn">Copy Access Link</button>
+                    </div>
+                </div>
+
+                <div class="card" id="results">
+                    <h2>Recent Scored Test Records</h2>
+                    <p>Records are de-identified and grouped for clinical analysis. No patient identifying information is shown.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Age Bracket</th>
+                                <th>Responses Captured</th>
+                                <th>Avg Latency (ms)</th>
+                                <th>Correct %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in recent_results %}
+                            <tr>
+                                <td>{{ row.session_id }}</td>
+                                <td>{{ row.age_bracket }}</td>
+                                <td>{{ row.response_count }}</td>
+                                <td>{{ row.avg_latency_ms }}</td>
+                                <td>{{ row.correct_percent }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No completed tests available yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card" id="exports">
+                    <h2>Spreadsheet Export (Clinician Access Only)</h2>
+                    <p>The PPST spreadsheet export includes raw responses, response latencies, and derived outcome measures such as percent correct.</p>
+                    <div class="actions">
+                        {% if is_test_giver %}
+                        <a class="btn btn-primary" href="{{ results_export_url|default:'#' }}">Download Scored Results (.xlsx)</a>
+                        {% else %}
+                        <button class="btn btn-secondary" type="button" disabled>Download Scored Results (.xlsx)</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var linkInput = document.getElementById('patient-link');
+            var copyButton = document.getElementById('copy-link-btn');
+
+            if (!linkInput || !copyButton) {
+                return;
+            }
+
+            if (!linkInput.value || linkInput.value === window.location.href) {
+                var base = window.location.origin || '';
+                linkInput.value = base + "{% url 'patient_access' %}";
+            }
+
+            copyButton.addEventListener('click', function () {
+                linkInput.select();
+                linkInput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                copyButton.textContent = 'Link Copied';
+                window.setTimeout(function () {
+                    copyButton.textContent = 'Copy Access Link';
+                }, 1200);
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -22,4 +22,4 @@ def test_actual(request):
 
 def clinician_dashboard(request):
     """Dashboard for clinicians to view patient results and manage tests"""
-    return render(request, "clinician_dashboard.html")
+    return render(request, "ppst/clinician_dashboard.html")
