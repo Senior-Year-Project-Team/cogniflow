@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CogniFlow – Page Flow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: monospace;
+      background: #fff;
+      padding: 40px;
+      color: #111;
+    }
+    h1 {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+    .meta {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 40px;
+    }
+
+    .canvas {
+      position: relative;
+      width: 720px;
+      margin: 0 auto;
+    }
+
+    /* nodes */
+    .node {
+      position: absolute;
+      border: 1px solid #111;
+      padding: 8px 14px;
+      background: #fff;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .node .name { font-weight: bold; }
+    .node .file { color: #666; font-size: 0.72rem; }
+
+    /* labels on arrows */
+    .lbl {
+      position: absolute;
+      font-size: 0.68rem;
+      color: #555;
+      background: #fff;
+      padding: 0 3px;
+    }
+
+    /* legend */
+    .legend {
+      margin-top: 32px;
+      font-size: 0.72rem;
+      color: #555;
+      display: flex;
+      gap: 28px;
+    }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<h1>COGNIFLOW — PAGE FLOW</h1>
+<p class="meta">CS 04400 · Spring 2026 · Updated with patient link entry step</p>
+
+<!--
+  Layout (all px, canvas 720×560):
+
+  HOME              (300, 20)   w=120
+  
+  Patient column x=80:
+    PATIENT ENTRY   (40, 130)   w=160
+    PATIENT ACCESS  (40, 240)   w=160
+    INSTRUCTIONS    (40, 350)   w=160
+    TEST            (40, 460)   w=160
+
+  Clinician column x=500:
+    LOGIN           (500, 130)  w=140
+    DASHBOARD       (500, 240)  w=140
+-->
+
+<div class="canvas" id="canvas" style="height:580px;">
+
+  <!-- HOME -->
+  <div class="node" id="n-home" style="left:290px; top:20px;">
+    <div class="name">Home</div>
+    <div class="file">index.html</div>
+  </div>
+
+  <!-- PATIENT ENTRY (new) -->
+  <div class="node" id="n-entry" style="left:40px; top:130px;">
+    <div class="name">Patient Link Entry</div>
+    <div class="file">patient_link_entry.html</div>
+  </div>
+
+  <!-- PATIENT ACCESS -->
+  <div class="node" id="n-access" style="left:40px; top:240px;">
+    <div class="name">Patient Access</div>
+    <div class="file">patient_access.html</div>
+  </div>
+
+  <!-- INSTRUCTIONS -->
+  <div class="node" id="n-instr" style="left:40px; top:350px;">
+    <div class="name">Instructions</div>
+    <div class="file">instructions.html</div>
+  </div>
+
+  <!-- TEST -->
+  <div class="node" id="n-test" style="left:40px; top:460px;">
+    <div class="name">PPST Assessment</div>
+    <div class="file">actual_test.html</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="node" id="n-login" style="left:500px; top:130px;">
+    <div class="name">Login</div>
+    <div class="file">login.html</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="node" id="n-dash" style="left:500px; top:240px;">
+    <div class="name">Clinician Dashboard</div>
+    <div class="file">clinician_dashboard.html</div>
+  </div>
+
+  <!-- SVG arrows -->
+  <svg id="svg" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none;">
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#111"/>
+      </marker>
+      <marker id="arr-dash" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#888"/>
+      </marker>
+    </defs>
+  </svg>
+
+</div>
+
+<div class="legend">
+  <span><svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="#111" stroke-width="1.5" marker-end="url(#arr)"/></svg> Navigation</span>
+  <span><svg width="28" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="#888" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-dash)"/></svg> Shares link / cross-flow</span>
+</div>
+
+<script>
+  function mid(el) {
+    const r = el.getBoundingClientRect();
+    const c = document.getElementById('canvas').getBoundingClientRect();
+    return {
+      x: r.left - c.left + r.width / 2,
+      y: r.top  - c.top  + r.height / 2,
+      t: r.top  - c.top,
+      b: r.bottom - c.top,
+      l: r.left - c.left,
+      r: r.right - c.left,
+    };
+  }
+
+  function line(svg, x1, y1, x2, y2, dashed) {
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+    l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('stroke', dashed ? '#888' : '#111');
+    l.setAttribute('stroke-width', dashed ? '1.2' : '1.5');
+    if (dashed) l.setAttribute('stroke-dasharray', '5,4');
+    l.setAttribute('marker-end', dashed ? 'url(#arr-dash)' : 'url(#arr)');
+    svg.appendChild(l);
+  }
+
+  function curve(svg, x1, y1, x2, y2, cx1, cy1, cx2, cy2, dashed) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`);
+    p.setAttribute('stroke', dashed ? '#888' : '#111');
+    p.setAttribute('stroke-width', dashed ? '1.2' : '1.5');
+    p.setAttribute('fill', 'none');
+    if (dashed) p.setAttribute('stroke-dasharray', '5,4');
+    p.setAttribute('marker-end', dashed ? 'url(#arr-dash)' : 'url(#arr)');
+    svg.appendChild(p);
+  }
+
+  function label(text, x, y) {
+    const d = document.createElement('div');
+    d.className = 'lbl';
+    d.textContent = text;
+    d.style.left = x + 'px';
+    d.style.top  = y + 'px';
+    document.getElementById('canvas').appendChild(d);
+  }
+
+  window.addEventListener('load', function() {
+    const svg   = document.getElementById('svg');
+    const home  = mid(document.getElementById('n-home'));
+    const entry = mid(document.getElementById('n-entry'));
+    const access= mid(document.getElementById('n-access'));
+    const instr = mid(document.getElementById('n-instr'));
+    const test  = mid(document.getElementById('n-test'));
+    const login = mid(document.getElementById('n-login'));
+    const dash  = mid(document.getElementById('n-dash'));
+
+    // home → patient entry (curve left)
+    curve(svg, home.l, home.y, entry.r, entry.y,
+          home.l - 40, home.y, entry.r + 40, entry.y, false);
+    label('Patient Access', (home.l + entry.r) / 2 - 40, home.y - 16);
+
+    // home → login (curve right)
+    curve(svg, home.r, home.y, login.l, login.y,
+          home.r + 40, home.y, login.l - 40, login.y, false);
+    label('Clinician Login', (home.r + login.l) / 2 - 30, home.y - 16);
+
+    // patient column vertical
+    line(svg, entry.x, entry.b, access.x, access.t - 4, false);
+    label('POST: lang, dob, voice', entry.r + 6, (entry.b + access.t) / 2 - 8);
+
+    line(svg, access.x, access.b, instr.x, instr.t - 4, false);
+    label('Begin Assessment', access.r + 6, (access.b + instr.t) / 2 - 8);
+
+    line(svg, instr.x, instr.b, test.x, test.t - 4, false);
+    label('Start Test', instr.r + 6, (instr.b + test.t) / 2 - 8);
+
+    // clinician vertical
+    line(svg, login.x, login.b, dash.x, dash.t - 4, false);
+    label('Authenticated', login.r + 6, (login.b + dash.t) / 2 - 8);
+
+    // dashboard → patient entry (dashed cross)
+    curve(svg, dash.l, dash.y + 8, entry.r, entry.y + 8,
+          dash.l - 80, dash.y + 8, entry.r + 80, entry.y + 8, true);
+    label('shares patient link', 260, dash.y - 2);
+  });
+</script>
+
+</body>
+</html>
