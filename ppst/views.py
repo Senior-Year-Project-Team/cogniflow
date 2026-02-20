@@ -15,6 +15,15 @@ def login(request):
         return redirect("clinician_dashboard")
     return render(request, "ppst/login.html")
 
+
+def clinician_register(request):
+    """Registration page for clinicians (demo – does not persist users)"""
+    if request.method == "POST":
+        # In a real app, you would create the user account here.
+        # For this demo, redirect to the login page after "creating" the account.
+        return redirect("login")
+    return render(request, "ppst/clinician_register.html")
+
 def patient_access(request):
     """Patient access page — collects language, DOB, and voice preference"""
     return render(request, "ppst/patient_access.html")
