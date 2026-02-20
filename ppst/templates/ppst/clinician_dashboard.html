@@ -250,25 +250,27 @@
 
                 <div class="card" id="results">
                     <h2>Recent Scored Test Records</h2>
-                    <p>Records are de-identified and grouped for clinical analysis. No patient identifying information is shown.</p>
+                    <p>Records are de-identified and grouped for clinical analysis. Each test is associated with an anonymized patient ID and can be downloaded individually.</p>
                     <table>
                         <thead>
                             <tr>
-                                <th>Session ID</th>
+                                <th>Patient ID</th>
                                 <th>Age Bracket</th>
-                                <th>Responses Captured</th>
                                 <th>Avg Latency (ms)</th>
                                 <th>Correct %</th>
+                                <th>Download</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for row in recent_results %}
                             <tr>
-                                <td>{{ row.session_id }}</td>
+                                <td>{{ row.patient_id }}</td>
                                 <td>{{ row.age_bracket }}</td>
-                                <td>{{ row.response_count }}</td>
                                 <td>{{ row.avg_latency_ms }}</td>
                                 <td>{{ row.correct_percent }}%</td>
+                                <td>
+                                    <a class="btn btn-secondary" href="{{ row.export_url|default:'#' }}">Download</a>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
