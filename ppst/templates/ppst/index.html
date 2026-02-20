@@ -102,6 +102,30 @@
         margin-bottom: 12px;
       }
 
+      .link-form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .link-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #c9c9c9;
+        border-radius: 3px;
+        font-size: 0.9rem;
+        color: #333;
+      }
+
+      .link-input:focus {
+        outline: 2px solid #d7e1f0;
+        border-color: #003d7a;
+      }
+
+      .link-help {
+        font-size: 0.8rem;
+        color: #666;
+      }
+
       .button {
         display: inline-block;
         padding: 10px 14px;
@@ -174,8 +198,20 @@
         </div>
         <div class="card">
           <h3>Patient Access</h3>
-          <p>Start a new assessment using the code provided by your clinician.</p>
-          <a class="button" href="/patient-entry/">Enter Link</a>
+          <p>Start a new assessment using the link provided by your clinician.</p>
+          <form class="link-form" id="patient-link-form">
+            <input
+              class="link-input"
+              id="patient-link"
+              type="url"
+              name="patient_link"
+              placeholder="Paste assessment link"
+              autocomplete="off"
+              required
+            />
+            <button class="button" type="submit">Open Link</button>
+            <div class="link-help">Paste the link your clinician sent and press Open Link.</div>
+          </form>
         </div>
       </div>
 
@@ -187,5 +223,32 @@
         </p>
       </div>
     </div>
+    <script>
+      (function () {
+        const form = document.getElementById("patient-link-form");
+        const input = document.getElementById("patient-link");
+
+        if (!form || !input) {
+          return;
+        }
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const link = input.value.trim();
+
+          if (!link) {
+            input.focus();
+            return;
+          }
+
+          if (!input.checkValidity()) {
+            input.reportValidity();
+            return;
+          }
+
+          window.location.href = link;
+        });
+      })();
+    </script>
   </body>
 </html>
