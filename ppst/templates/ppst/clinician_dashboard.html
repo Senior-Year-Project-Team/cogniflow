@@ -208,7 +208,6 @@
                 <a href="#overview">Overview</a>
                 <a href="#administer">Administer Test</a>
                 <a href="#results">Scored Results</a>
-                <a href="#exports">Exports</a>
             </div>
             
             <div class="main-content">
@@ -279,18 +278,6 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                </div>
-
-                <div class="card" id="exports">
-                    <h2>Spreadsheet Export (Clinician Access Only)</h2>
-                    <p>The PPST spreadsheet export includes raw responses, response latencies, and derived outcome measures such as percent correct.</p>
-                    <div class="actions">
-                        {% if is_test_giver %}
-                        <a class="btn btn-primary" href="{{ results_export_url|default:'#' }}">Download Scored Results (.xlsx)</a>
-                        {% else %}
-                        <button class="btn btn-secondary" type="button" disabled>Download Scored Results (.xlsx)</button>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
         </div>
