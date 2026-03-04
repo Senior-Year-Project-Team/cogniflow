@@ -110,6 +110,12 @@
             gap: 0.75rem;
             margin-top: 1rem;
         }
+        .field-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.85rem;
+            flex-wrap: wrap;
+        }
         .field-group {
             margin-top: 0.85rem;
         }
@@ -235,16 +241,76 @@
                 </div>
 
                 <div class="card" id="administer">
-                    <h2>Administer New Test</h2>
-                    <p>Share the patient access link below so a patient can start the PPST session you administer.</p>
-                    <div class="field-group">
-                        <label class="field-label" for="patient-link">Patient Access Link</label>
-                        <input class="field-input" id="patient-link" type="text" value="{{ patient_access_link|default:'' }}" readonly>
+                    <h2>Generate Patient Link</h2>
+                    <p>Select the test language and voice, then click <strong>Generate Link</strong>. Share the unique link with your patient — it will only work once.</p>
+
+                    <div class="field-row">
+                        <div class="field-group" style="flex:1">
+                            <label class="field-label" for="gen-language">Test Language</label>
+                            <select class="field-input" id="gen-language">
+                                <option value="en">English</option>
+                                <option value="es">Español (Spanish)</option>
+                            </select>
+                        </div>
+                        <div class="field-group" style="flex:1">
+                            <label class="field-label" for="gen-voice">Audio Voice</label>
+                            <select class="field-input" id="gen-voice">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="none">No Voice</option>
+                            </select>
+                        </div>
+                        <div class="field-group" style="flex:1">
+                            <label class="field-label" for="gen-dob">Patient Date of Birth</label>
+                            <input class="field-input" type="text" id="gen-dob"
+                                   placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off">
+                            <small style="color:#888; font-size:0.8rem;">
+                                Not stored — used only to derive age bracket.
+                            </small>
+                        </div>
                     </div>
+
                     <div class="actions">
-                        <a class="btn btn-primary" href="{% url 'patient_access' %}" target="_blank" rel="noopener">Open Patient Access Page</a>
-                        <button class="btn btn-secondary" type="button" id="copy-link-btn">Copy Access Link</button>
+                        <button class="btn btn-primary" type="button" id="gen-btn">Generate Link</button>
                     </div>
+
+                    <div id="gen-result" style="display:none; margin-top:1rem;">
+                        <label class="field-label">Patient Access Link</label>
+                        <input class="field-input" id="gen-link-input" type="text" readonly>
+                        <div class="actions" style="margin-top:0.5rem;">
+                            <button class="btn btn-secondary" type="button" id="copy-gen-btn">Copy Link</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="pending">
+                    <h2>Pending Sessions</h2>
+                    <p>Links that have been generated but not yet completed by a patient.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Language</th>
+                                <th>Voice</th>
+                                <th>Generated</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in pending_rows %}
+                            <tr>
+                                <td>{{ row.language }}</td>
+                                <td>{{ row.voice }}</td>
+                                <td>{{ row.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <button class="btn btn-secondary copy-pending-btn"
+                                            data-url="{{ row.patient_url }}">Copy Link</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4">No pending sessions.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="card" id="results">
@@ -283,29 +349,68 @@
         </div>
     </div>
     <script>
-        (function () {
-            var linkInput = document.getElementById('patient-link');
-            var copyButton = document.getElementById('copy-link-btn');
+        // ── Auto-format DOB as clinician types ────────────────────────────
+        document.getElementById('gen-dob').addEventListener('input', function () {
+            var digits = this.value.replace(/\D/g, '');
+            if (digits.length >= 3) digits = digits.slice(0, 2) + '/' + digits.slice(2);
+            if (digits.length >= 6) digits = digits.slice(0, 5) + '/' + digits.slice(5, 9);
+            this.value = digits;
+        });
 
-            if (!linkInput || !copyButton) {
+        // ── Generate patient link ──────────────────────────────────────────
+        document.getElementById('gen-btn').addEventListener('click', function () {
+            var language = document.getElementById('gen-language').value;
+            var voice    = document.getElementById('gen-voice').value;
+            var dob      = document.getElementById('gen-dob').value;
+
+            if (!dob) {
+                alert('Please enter the patient\'s date of birth.');
                 return;
             }
 
-            if (!linkInput.value || linkInput.value === window.location.href) {
-                var base = window.location.origin || '';
-                linkInput.value = base + "{% url 'patient_access' %}";
-            }
+            var formData = new FormData();
+            formData.append('language', language);
+            formData.append('voice', voice);
+            formData.append('dob', dob);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-            copyButton.addEventListener('click', function () {
-                linkInput.select();
-                linkInput.setSelectionRange(0, 99999);
-                document.execCommand('copy');
-                copyButton.textContent = 'Link Copied';
-                window.setTimeout(function () {
-                    copyButton.textContent = 'Copy Access Link';
-                }, 1200);
+            fetch("{% url 'generate_session' %}", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.url) {
+                    document.getElementById('gen-link-input').value = data.url;
+                    document.getElementById('gen-result').style.display = 'block';
+                    document.getElementById('gen-dob').value = '';  // clear DOB immediately
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(function () { alert('Network error. Please try again.'); });
+        });
+
+        // ── Copy generated link ────────────────────────────────────────────
+        document.getElementById('copy-gen-btn').addEventListener('click', function () {
+            var input = document.getElementById('gen-link-input');
+            input.select();
+            document.execCommand('copy');
+            this.textContent = 'Copied!';
+            var btn = this;
+            setTimeout(function () { btn.textContent = 'Copy Link'; }, 1200);
+        });
+
+        // ── Copy pending session links ─────────────────────────────────────
+        document.querySelectorAll('.copy-pending-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = this.getAttribute('data-url');
+                navigator.clipboard.writeText(url).then(function () {
+                    btn.textContent = 'Copied!';
+                    setTimeout(function () { btn.textContent = 'Copy Link'; }, 1200);
+                });
             });
-        })();
+        });
     </script>
 </body>
 </html>
