@@ -44,30 +44,45 @@ def login(request):
 
     return render(request, "ppst/login.html")
 
-
 def clinician_register(request):
     """Registration page for new clinicians."""
     from django.contrib.auth.models import User
     from .models import Clinician
 
     if request.method == "POST":
-        username    = request.POST.get("username", "").strip()
-        password    = request.POST.get("password", "")
-        first_name  = request.POST.get("first_name", "").strip()
-        last_name   = request.POST.get("last_name", "").strip()
-        institution = request.POST.get("institution", "").strip()
+        full_name = request.POST.get("full_name", "").strip()
+        email     = request.POST.get("email", "").strip()
+        password  = request.POST.get("password", "")
+        confirm   = request.POST.get("password_confirm", "")
+
+        # basic validation
+        if not email:
+            return render(request, "ppst/clinician_register.html", {"error": "Email is required."})
+        if password != confirm:
+            return render(request, "ppst/clinician_register.html", {"error": "Passwords do not match."})
+
+        # Use email as username (simple and common)
+        username = email.lower()
 
         if User.objects.filter(username=username).exists():
-            return render(request, "ppst/clinician_register.html",
-                          {"error": "Username already taken."})
+            return render(request, "ppst/clinician_register.html", {"error": "Account already exists."})
+
+        # Split full name into first/last
+        parts = full_name.split()
+        first_name = parts[0] if parts else ""
+        last_name  = " ".join(parts[1:]) if len(parts) > 1 else ""
 
         user = User.objects.create_user(
             username=username,
+            email=email,
             password=password,
             first_name=first_name,
             last_name=last_name,
         )
-        Clinician.objects.create(user=user, institution=institution)
+
+        # institution not collected in your HTML, so leave blank
+        Clinician.objects.create(user=user, institution="")
+
         return redirect("login")
 
     return render(request, "ppst/clinician_register.html")
