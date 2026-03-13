@@ -260,6 +260,7 @@
             <p id="completion-message">Thank you for completing the Philadelphia Pointing Span Test.</p>
             <p id="completion-info">Your responses have been recorded. You may now close this window.</p>
         </div>
+
     </div>
 
     <script>
@@ -267,19 +268,19 @@
         const language = urlParams.get('lang') || 'en';
 
         const testTrials = [
-            { sequence: ['2', '9', '5'], type: 'digit' },
             { sequence: ['7', '3', '1', '8'], type: 'digit' },
-            { sequence: ['4', '1', '9', '6', '2'], type: 'digit' },
-            { sequence: ['5', '8', '2', '7', '3', '1'], type: 'digit' },
-            { sequence: ['9', '4', '6', '1', '8', '3', '5'], type: 'digit' },
-            { sequence: ['3', '7', '2', '9', '1', '5', '4', '8'], type: 'digit' },
+            { sequence: ['4', '1', '9', '6'], type: 'digit' },
+            { sequence: ['5', '8', '2', '7', '3'], type: 'digit' },
+            { sequence: ['9', '4', '6', '1', '8'], type: 'digit' },
+            { sequence: ['3', '7', '2', '9'], type: 'digit' },
+            { sequence: ['1', '5', '4', '8', '6'], type: 'digit' },
 
-            { sequence: ['A', '3', 'K'], type: 'mixed' },
-            { sequence: ['5', 'R', '2', 'B'], type: 'mixed' },
-            { sequence: ['T', '7', 'D', '4', 'N'], type: 'mixed' },
-            { sequence: ['9', 'L', '3', 'F', '6', 'H'], type: 'mixed' },
-            { sequence: ['M', '2', 'S', '8', 'C', '5', 'K'], type: 'mixed' },
-            { sequence: ['4', 'R', '1', 'E', '7', 'A', '9', 'T'], type: 'mixed' }
+            { sequence: ['A', '3', 'K', '5'], type: 'mixed' },
+            { sequence: ['5', 'R', '2', 'B', '7'], type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4'], type: 'mixed' },
+            { sequence: ['9', 'L', '3', 'F', '6'], type: 'mixed' },
+            { sequence: ['M', '2', 'S', '8'], type: 'mixed' },
+            { sequence: ['4', 'R', '1', 'E', '7'], type: 'mixed' }
         ];
 
         const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -288,6 +289,10 @@
         let currentTrialIndex = 0;
         let userResponse = [];
         let startTime = null;
+        let responseStartTime = null;
+        let lastClickTime = null;
+        let clickLatenciesMs = [];
+        let clickIntervalsMs = [];
         let testResults = [];
 
         const translations = {
@@ -338,6 +343,10 @@
         function startTrial() {
             const trial = testTrials[currentTrialIndex];
             userResponse = [];
+            clickLatenciesMs = [];
+            clickIntervalsMs = [];
+            responseStartTime = null;
+            lastClickTime = null;
 
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
@@ -416,12 +425,18 @@
             grid.classList.add('active');
             document.getElementById('submit-btn').classList.add('active');
             startTime = Date.now();
+            responseStartTime = startTime;
+            lastClickTime = startTime;
         }
 
         // FLASH ONLY, THEN RETURN TO ORIGINAL LOOK
         function selectSymbol(symbol, button) {
             if (button.disabled || button.classList.contains('flash')) return;
 
+            const now = Date.now();
+            clickLatenciesMs.push(now - responseStartTime);
+            clickIntervalsMs.push(now - lastClickTime);
+            lastClickTime = now;
             userResponse.push(symbol);
 
             button.classList.add('flash');
@@ -455,7 +470,9 @@
                 stimulus: trial.sequence,
                 response: userResponse,
                 correct: isCorrect,
-                responseTime: responseTime
+                responseTime: responseTime,
+                clickLatenciesMs: [...clickLatenciesMs],
+                clickIntervalsMs: [...clickIntervalsMs]
             });
 
             const buttons = document.querySelectorAll('.response-button');
@@ -493,6 +510,7 @@
 
             console.log(`Accuracy: ${accuracy}%`);
             console.log(`Average Response Time: ${avgResponseTime}ms`);
+
         }
 
         function hideAllButtons() {
