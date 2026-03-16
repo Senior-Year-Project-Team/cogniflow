@@ -101,15 +101,16 @@
 
         .example-box h4 {
             color: #003d7a;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
             font-weight: 600;
         }
 
         .example-box p {
             color: #333;
             font-size: 0.9rem;
-            margin: 5px 0;
+            margin: 6px 0;
+            line-height: 1.6;
         }
 
         .important-note {
@@ -155,7 +156,6 @@
             background: #001d3a;
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 padding: 30px 20px;
@@ -174,33 +174,37 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <h1 id="header-title">CogniFlow</h1>
             <p id="header-subtitle">Philadelphia Pointing Span Test - Instructions</p>
         </div>
 
-        <!-- Instructions -->
         <div class="instructions">
             <h2 id="instructions-title">How This Test Works</h2>
             <p id="instructions-intro">
-                You will be presented with sequences of numbers and letters. Your task is to remember these sequences and respond by clicking on them in the correct order.
+                You will be presented with sequences of numbers and letters. Your task is to remember them and then click the numbers in ascending order followed by the letters in alphabetical order.
             </p>
 
             <div class="steps">
                 <h3 id="steps-title">What to Expect:</h3>
                 <ol>
-                    <li id="step-1"><strong>Watch and Listen:</strong> A sequence of numbers or letters will appear on screen and be read aloud to you.</li>
+                    <li id="step-1"><strong>Watch and Listen:</strong> A sequence of numbers or letters will appear on screen one at a time and be read aloud to you.</li>
                     <li id="step-2"><strong>Remember:</strong> Pay close attention and remember the sequence you see and hear.</li>
-                    <li id="step-3"><strong>Respond:</strong> After the sequence is presented, click on the symbols in the order shown.</li>
+                    <li id="step-3"><strong>Respond:</strong> After the sequence is presented, click the numbers in ascending order, then the letters in alphabetical order.</li>
                     <li id="step-4"><strong>Feedback:</strong> During practice, you will receive feedback on your responses.</li>
                 </ol>
             </div>
 
             <div class="example-box">
-                <h4 id="example-title">Example:</h4>
-                <p id="example-shown"><strong>Sequence shown:</strong> 5 - 2 - 8</p>
-                <p id="example-response"><strong>Your response:</strong> Click 5, then 2, then 8</p>
+                <h4 id="example-title-1">Example 1:</h4>
+                <p id="example-shown-1"><strong>Sequence shown:</strong> 5 - 2 - 8</p>
+                <p id="example-response-1"><strong>Your response:</strong> Click 2, then 5, then 8</p>
+            </div>
+
+            <div class="example-box">
+                <h4 id="example-title-2">Example 2:</h4>
+                <p id="example-shown-2"><strong>Sequence shown:</strong> 5 - A - 2 - C - 8 - B</p>
+                <p id="example-response-2"><strong>Your response:</strong> Click 2, then 5, then 8, then A, then B, then C</p>
             </div>
 
             <div class="important-note">
@@ -212,9 +216,8 @@
             </p>
         </div>
 
-        <!-- Start Button -->
         <div class="button-container">
-            <button class="start-practice-button" id="start-practice-btn" onclick="window.location.href='/test/actual'">
+            <button class="start-practice-button" id="start-practice-btn">
                 <span id="btn-text">Start Test</span>
             </button>
         </div>
@@ -229,15 +232,18 @@
                 headerTitle: "CogniFlow",
                 headerSubtitle: "Philadelphia Pointing Span Test - Instructions",
                 instructionsTitle: "How This Test Works",
-                instructionsIntro: "You will be presented with sequences of numbers and letters. Your task is to remember these sequences and respond by clicking on them in the correct order.",
+                instructionsIntro: "You will be presented with sequences of numbers and letters. Your task is to remember them and then click the numbers in ascending order followed by the letters in alphabetical order.",
                 stepsTitle: "What to Expect:",
                 step1: "<strong>Watch and Listen:</strong> A sequence of numbers or letters will appear on screen one at a time and be read aloud to you.",
                 step2: "<strong>Remember:</strong> Pay close attention and remember the sequence you see and hear.",
-                step3: "<strong>Respond:</strong> After the sequence is presented, click on the symbols in the order shown.",
-                step4: "<strong>Feedback:</strong> You will receive visual and auditory feedback for each selection.",
-                exampleTitle: "Example:",
-                exampleShown: "<strong>Sequence shown:</strong> 5 - 2 - 8",
-                exampleResponse: "<strong>Your response:</strong> Click 5, then 2, then 8",
+                step3: "<strong>Respond:</strong> After the sequence is presented, click the numbers in ascending order, then the letters in alphabetical order.",
+                step4: "<strong>Feedback:</strong> During practice, you will receive feedback on your responses.",
+                exampleTitle1: "Example 1:",
+                exampleShown1: "<strong>Sequence shown:</strong> 5 - 2 - 8",
+                exampleResponse1: "<strong>Your response:</strong> Click 2, then 5, then 8",
+                exampleTitle2: "Example 2:",
+                exampleShown2: "<strong>Sequence shown:</strong> 5 - A - 2 - C - 8 - B",
+                exampleResponse2: "<strong>Your response:</strong> Click 2, then 5, then 8, then A, then B, then C",
                 noteTest: "<strong>Test Information:</strong> You will complete 12 test trials. These trials will be scored. Take your time and do your best.",
                 instructionsReady: "Click the button below when you are ready to begin the test.",
                 btnText: "Start Test"
@@ -246,23 +252,26 @@
                 headerTitle: "CogniFlow",
                 headerSubtitle: "Prueba de Amplitud de Señalamiento de Filadelfia - Instrucciones",
                 instructionsTitle: "Cómo Funciona Esta Prueba",
-                instructionsIntro: "Se le presentarán secuencias de números y letras. Su tarea es recordar estas secuencias y responder haciendo clic en ellas en el orden correcto.",
+                instructionsIntro: "Se le presentarán secuencias de números y letras. Su tarea es recordarlas y luego hacer clic primero en los números en orden ascendente y después en las letras en orden alfabético.",
                 stepsTitle: "Qué Esperar:",
                 step1: "<strong>Observar y Escuchar:</strong> Una secuencia de números o letras aparecerá en la pantalla uno a la vez y se leerá en voz alta.",
                 step2: "<strong>Recordar:</strong> Preste mucha atención y recuerde la secuencia que ve y escucha.",
-                step3: "<strong>Responder:</strong> Después de presentar la secuencia, haga clic en los símbolos en el orden mostrado.",
-                step4: "<strong>Retroalimentación:</strong> Recibirá retroalimentación visual y auditiva para cada selección.",
-                exampleTitle: "Ejemplo:",
-                exampleShown: "<strong>Secuencia mostrada:</strong> 5 - 2 - 8",
-                exampleResponse: "<strong>Su respuesta:</strong> Haga clic en 5, luego 2, luego 8",
+                step3: "<strong>Responder:</strong> Después de presentar la secuencia, haga clic primero en los números en orden ascendente y luego en las letras en orden alfabético.",
+                step4: "<strong>Retroalimentación:</strong> Durante la práctica, recibirá retroalimentación sobre sus respuestas.",
+                exampleTitle1: "Ejemplo 1:",
+                exampleShown1: "<strong>Secuencia mostrada:</strong> 5 - 2 - 8",
+                exampleResponse1: "<strong>Su respuesta:</strong> Haga clic en 2, luego 5, luego 8",
+                exampleTitle2: "Ejemplo 2:",
+                exampleShown2: "<strong>Secuencia mostrada:</strong> 5 - A - 2 - C - 8 - B",
+                exampleResponse2: "<strong>Su respuesta:</strong> Haga clic en 2, luego 5, luego 8, luego A, luego B, luego C",
                 noteTest: "<strong>Información de la Prueba:</strong> Completará 12 pruebas. Estas pruebas serán calificadas. Tómese su tiempo y haga lo mejor que pueda.",
                 instructionsReady: "Haga clic en el botón de abajo cuando esté listo para comenzar la prueba.",
                 btnText: "Comenzar Prueba"
             }
         };
 
-        // Apply translations
-        const t = translations[language];
+        const t = translations[language] || translations.en;
+
         document.getElementById('header-title').textContent = t.headerTitle;
         document.getElementById('header-subtitle').textContent = t.headerSubtitle;
         document.getElementById('instructions-title').textContent = t.instructionsTitle;
@@ -272,17 +281,29 @@
         document.getElementById('step-2').innerHTML = t.step2;
         document.getElementById('step-3').innerHTML = t.step3;
         document.getElementById('step-4').innerHTML = t.step4;
-        document.getElementById('example-title').textContent = t.exampleTitle;
-        document.getElementById('example-shown').innerHTML = t.exampleShown;
-        document.getElementById('example-response').innerHTML = t.exampleResponse;
+
+        document.getElementById('example-title-1').textContent = t.exampleTitle1;
+        document.getElementById('example-shown-1').innerHTML = t.exampleShown1;
+        document.getElementById('example-response-1').innerHTML = t.exampleResponse1;
+
+        document.getElementById('example-title-2').textContent = t.exampleTitle2;
+        document.getElementById('example-shown-2').innerHTML = t.exampleShown2;
+        document.getElementById('example-response-2').innerHTML = t.exampleResponse2;
+
         document.getElementById('note-test').innerHTML = t.noteTest;
         document.getElementById('instructions-ready').textContent = t.instructionsReady;
         document.getElementById('btn-text').textContent = t.btnText;
 
+<<<<<<< HEAD
         // Update button link with language parameter
         document.getElementById('start-practice-btn').onclick = function() {
     window.location.href = '/test/actual/';
 };
+=======
+        document.getElementById('start-practice-btn').onclick = function () {
+            window.location.href = '/test/actual?lang=' + language;
+        };
+>>>>>>> origin/main
     </script>
 </body>
 </html>
