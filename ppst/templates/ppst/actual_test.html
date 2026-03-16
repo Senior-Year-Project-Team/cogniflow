@@ -266,20 +266,25 @@
         const urlParams = new URLSearchParams(window.location.search);
         const language = urlParams.get('lang') || 'en';
 
+        // PPST spec: 6 digit trials (3 x 4-span, 3 x 5-span)
+        //            6 mixed trials (3 x 4-span, 3 x 5-span)
         const testTrials = [
-            { sequence: ['2', '9', '5'], type: 'digit' },
-            { sequence: ['7', '3', '1', '8'], type: 'digit' },
-            { sequence: ['4', '1', '9', '6', '2'], type: 'digit' },
-            { sequence: ['5', '8', '2', '7', '3', '1'], type: 'digit' },
-            { sequence: ['9', '4', '6', '1', '8', '3', '5'], type: 'digit' },
-            { sequence: ['3', '7', '2', '9', '1', '5', '4', '8'], type: 'digit' },
-
-            { sequence: ['A', '3', 'K'], type: 'mixed' },
-            { sequence: ['5', 'R', '2', 'B'], type: 'mixed' },
-            { sequence: ['T', '7', 'D', '4', 'N'], type: 'mixed' },
-            { sequence: ['9', 'L', '3', 'F', '6', 'H'], type: 'mixed' },
-            { sequence: ['M', '2', 'S', '8', 'C', '5', 'K'], type: 'mixed' },
-            { sequence: ['4', 'R', '1', 'E', '7', 'A', '9', 'T'], type: 'mixed' }
+            // Digit-only -- 3 x 4-span
+            { sequence: ['3', '9', '1', '7'],        type: 'digit' },
+            { sequence: ['6', '2', '8', '4'],        type: 'digit' },
+            { sequence: ['5', '1', '9', '3'],        type: 'digit' },
+            // Digit-only -- 3 x 5-span
+            { sequence: ['7', '2', '5', '9', '1'],   type: 'digit' },
+            { sequence: ['4', '8', '1', '6', '3'],   type: 'digit' },
+            { sequence: ['9', '3', '6', '2', '8'],   type: 'digit' },
+            // Mixed -- 3 x 4-span (2 digits + 2 letters each)
+            { sequence: ['5', 'R', '2', 'B'],        type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4'],        type: 'mixed' },
+            { sequence: ['8', 'N', '1', 'K'],        type: 'mixed' },
+            // Mixed -- 3 x 5-span (3 digits + 2 letters each)
+            { sequence: ['T', '7', 'D', '4', 'N'],   type: 'mixed' },
+            { sequence: ['9', 'L', '3', 'F', '6'],   type: 'mixed' },
+            { sequence: ['M', '2', 'S', '8', 'C'],   type: 'mixed' },
         ];
 
         const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -442,12 +447,27 @@
                 `<strong>${t.yourResponse}</strong> ${userResponse.join(' - ')}`;
         }
 
+        // Returns the PPST-correct expected answer for a trial.
+        // Digit: digits sorted numerically. Mixed: digits ascending, then letters alphabetically.
+        // Server always recomputes authoritatively -- this is for client-side feedback only.
+        function computeCorrectResponse(sequence, type) {
+            if (type === 'digit') {
+                return [...sequence].sort((a, b) => parseInt(a) - parseInt(b));
+            }
+            const digits  = sequence.filter(s => /^\d$/.test(s)).sort((a, b) => parseInt(a) - parseInt(b));
+            const letters = sequence.filter(s => /^[A-Za-z]$/.test(s)).sort();
+            return [...digits, ...letters];
+        }
+
         document.getElementById('submit-btn').onclick = function () {
             if (userResponse.length === 0) return;
 
             const responseTime = Date.now() - startTime;
             const trial = testTrials[currentTrialIndex];
-            const isCorrect = JSON.stringify(userResponse) === JSON.stringify(trial.sequence);
+
+            // Compare against PPST-reordered correct answer, not raw stimulus order
+            const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
+            const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
 
             testResults.push({
                 trialNumber: currentTrialIndex + 1,
