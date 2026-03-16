@@ -370,6 +370,25 @@ def clinician_dashboard(request):
             ),
         })
 
+    # Age bracket stats — all completed tests in the system (population norms)
+    all_completed = TestSession.objects.filter(is_completed=True)
+    bracket_stats = []
+    for bracket, label in TestSession.AGE_BRACKET_CHOICES:
+        bracket_sessions = all_completed.filter(age_bracket=bracket)
+        bracket_responses = TrialResponse.objects.filter(session__in=bracket_sessions)
+        count = bracket_sessions.count()
+        if count > 0:
+            correct = bracket_responses.filter(is_correct=True).count()
+            total_responses = bracket_responses.count()
+            avg_lat = bracket_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0
+            correct_pct = round(correct / total_responses * 100) if total_responses else 0
+            bracket_stats.append({
+                "bracket":      label,
+                "count":        count,
+                "correct_pct":  correct_pct,
+                "avg_latency":  round(avg_lat),
+            })
+
     context = {
         "total_tests":          total,
         "mean_correct_percent": mean_correct,
@@ -377,6 +396,7 @@ def clinician_dashboard(request):
         "age_bracket_count":    completed_sessions.values("age_bracket").distinct().count(),
         "recent_results":       recent_results,
         "pending_rows":         pending_rows,
+        "bracket_stats":        bracket_stats,
         "generate_url":         request.build_absolute_uri(reverse("generate_session")),
     }
     return render(request, "ppst/clinician_dashboard.html", context)

@@ -215,6 +215,7 @@
                 <a href="#overview">Overview</a>
                 <a href="#administer">Administer Test</a>
                 <a href="#results">Scored Results</a>
+                <a href="#age-stats">Age Bracket Stats</a>
             </div>
             
             <div class="main-content">
@@ -239,6 +240,35 @@
                             <div class="value">{{ age_bracket_count|default:"0" }}</div>
                         </div>
                     </div>
+                </div>
+
+                <div class="card" id="age-stats">
+                    <h2>Performance by Age Bracket</h2>
+                    <p>Population norms across all completed tests in the system.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Age Bracket</th>
+                                <th>Tests Completed</th>
+                                <th>Avg Correct %</th>
+                                <th>Avg Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in bracket_stats %}
+                            <tr>
+                                <td>{{ row.bracket }}</td>
+                                <td>{{ row.count }}</td>
+                                <td>{{ row.correct_pct }}%</td>
+                                <td>{{ row.avg_latency }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>        
+                                <td colspan="4">No data available yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="card" id="administer">
