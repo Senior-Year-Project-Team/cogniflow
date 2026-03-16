@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -43,6 +44,12 @@ def login(request):
         return render(request, "ppst/login.html", {"error": "Invalid username or password."})
 
     return render(request, "ppst/login.html")
+
+def logout_view(request):
+    """Log out the current clinician and redirect to login."""
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect("login")
 
 def clinician_register(request):
     """Registration page for new clinicians."""
@@ -190,6 +197,27 @@ def test_actual(request):
 
 
 # ---------------------------------------------------------------------------
+# PPST scoring helper
+# ---------------------------------------------------------------------------
+
+def _compute_correct_response(stimulus: list, trial_type: str) -> list:
+    """
+    Returns the expected PPST correct response for a given stimulus.
+
+    Digit trials:  sort all symbols numerically ascending.
+        e.g. ['9', '2', '5']  ->  ['2', '5', '9']
+
+    Mixed trials:  digits ascending first, then letters alphabetically.
+        e.g. ['T', '7', 'D', '4', 'N']  ->  ['4', '7', 'D', 'N', 'T']
+    """
+    if trial_type == "digit":
+        return sorted(stimulus, key=lambda s: int(s))
+    digits  = sorted([s for s in stimulus if s.isdigit()], key=lambda s: int(s))
+    letters = sorted([s for s in stimulus if s.isalpha()])
+    return digits + letters
+
+
+# ---------------------------------------------------------------------------
 # Result submission (called by JS fetch when the patient finishes)
 # ---------------------------------------------------------------------------
 
@@ -239,16 +267,24 @@ def submit_results(request):
             status=400,
         )
 
-    # Persist each trial response
+    # Persist each trial response — score server-side using PPST rules
     for item in results:
+        stimulus   = item["stimulus"]
+        response   = item["response"]
+        trial_type = item["type"]
+
+        # Server-side PPST scoring (overrides any client-supplied 'correct' flag)
+        correct_answer = _compute_correct_response(stimulus, trial_type)
+        is_correct     = (response == correct_answer)
+
         TrialResponse.objects.create(
             session           = test_session,
             trial_number      = item["trialNumber"],
-            trial_type        = item["type"],
-            stimulus_sequence = ",".join(item["stimulus"]),
-            patient_response  = ",".join(item["response"]),
+            trial_type        = trial_type,
+            stimulus_sequence = ",".join(stimulus),
+            patient_response  = ",".join(response),
             latency_ms        = item["responseTime"],
-            is_correct        = item["correct"],
+            is_correct        = is_correct,
         )
 
     # Mark the session as complete
@@ -266,6 +302,7 @@ def submit_results(request):
 # Clinician dashboard
 # ---------------------------------------------------------------------------
 
+@login_required(login_url="/login/")
 def clinician_dashboard(request):
     """Dashboard for clinicians to view results and administer new tests."""
     from django.db.models import Avg
@@ -335,9 +372,11 @@ def clinician_dashboard(request):
 # CSV export
 # ---------------------------------------------------------------------------
 
+@login_required(login_url="/login/")
 def export_session(request, access_token):
     """Export all trial responses for a single session as a CSV download."""
-    session   = get_object_or_404(TestSession, access_token=access_token)
+    clinician = getattr(request.user, "clinician", None)
+    session   = get_object_or_404(TestSession, access_token=access_token, clinician=clinician)
     responses = session.trial_responses.all()
 
     lines = ["trial_number,trial_type,stimulus,response,correct,latency_ms"]
