@@ -117,19 +117,16 @@
             transform: scale(0.95);
         }
 
-        /* TEMPORARY click color */
         .response-button.flash {
             background: #7e9fbe;
             color: #ffffff;
         }
 
-        /* Keep this class if you ever want persistent selected state later */
         .response-button.selected {
             background: #003d7a;
             color: white;
         }
 
-        /* Disabled should look normal (not faded blue) */
         .response-button:disabled {
             opacity: 1;
             cursor: not-allowed;
@@ -264,27 +261,22 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const language = urlParams.get('lang') || 'en';
+        const language = urlParams.get('lang') || "{{ language|default:'en'|escapejs }}";
+        const selectedVoice = urlParams.get('voice') || "{{ voice|default:'male'|escapejs }}";
 
-        // PPST spec: 6 digit trials (3 x 4-span, 3 x 5-span)
-        //            6 mixed trials (3 x 4-span, 3 x 5-span)
         const testTrials = [
-            // Digit-only -- 3 x 4-span
-            { sequence: ['3', '9', '1', '7'],        type: 'digit' },
-            { sequence: ['6', '2', '8', '4'],        type: 'digit' },
-            { sequence: ['5', '1', '9', '3'],        type: 'digit' },
-            // Digit-only -- 3 x 5-span
-            { sequence: ['7', '2', '5', '9', '1'],   type: 'digit' },
-            { sequence: ['4', '8', '1', '6', '3'],   type: 'digit' },
-            { sequence: ['9', '3', '6', '2', '8'],   type: 'digit' },
-            // Mixed -- 3 x 4-span (2 digits + 2 letters each)
-            { sequence: ['5', 'R', '2', 'B'],        type: 'mixed' },
-            { sequence: ['T', '7', 'D', '4'],        type: 'mixed' },
-            { sequence: ['8', 'N', '1', 'K'],        type: 'mixed' },
-            // Mixed -- 3 x 5-span (3 digits + 2 letters each)
-            { sequence: ['T', '7', 'D', '4', 'N'],   type: 'mixed' },
-            { sequence: ['9', 'L', '3', 'F', '6'],   type: 'mixed' },
-            { sequence: ['M', '2', 'S', '8', 'C'],   type: 'mixed' },
+            { sequence: ['3', '9', '1', '7'],      type: 'digit' },
+            { sequence: ['6', '2', '8', '4'],      type: 'digit' },
+            { sequence: ['5', '1', '9', '3'],      type: 'digit' },
+            { sequence: ['7', '2', '5', '9', '1'], type: 'digit' },
+            { sequence: ['4', '8', '1', '6', '3'], type: 'digit' },
+            { sequence: ['9', '3', '6', '2', '8'], type: 'digit' },
+            { sequence: ['5', 'R', '2', 'B'],      type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4'],      type: 'mixed' },
+            { sequence: ['8', 'N', '1', 'K'],      type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4', 'N'], type: 'mixed' },
+            { sequence: ['9', 'L', '3', 'F', '6'], type: 'mixed' },
+            { sequence: ['M', '2', 'S', '8', 'C'], type: 'mixed' },
         ];
 
         const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -294,6 +286,7 @@
         let userResponse = [];
         let startTime = null;
         let testResults = [];
+        let availableVoices = [];
 
         const translations = {
             en: {
@@ -328,11 +321,74 @@
 
         document.getElementById('trial-counter').innerHTML =
             `${t.trialCounter} <strong id="current-trial">1</strong> ${t.of} <strong id="total-trials">12</strong>`;
+        document.getElementById('status-text').textContent = t.getReady;
         document.getElementById('submit-btn').textContent = t.submit;
         document.getElementById('next-btn').textContent = t.nextTrial;
         document.getElementById('completion-title').textContent = t.completionTitle;
         document.getElementById('completion-message').textContent = t.completionMessage;
         document.getElementById('completion-info').textContent = t.completionInfo;
+
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            availableVoices = window.speechSynthesis.getVoices();
+        }
+
+        function pickBestVoice() {
+            if (!availableVoices.length) return null;
+
+            const langPrefix = language === 'es' ? 'es' : 'en';
+
+            let candidates = availableVoices.filter(v =>
+                v.lang && v.lang.toLowerCase().startsWith(langPrefix)
+            );
+
+            if (!candidates.length) {
+                candidates = availableVoices;
+            }
+
+            if (selectedVoice === 'none') {
+                return null;
+            }
+
+            if (selectedVoice === 'female') {
+                const femaleVoice = candidates.find(v =>
+                    /female|woman|zira|susan|aria|siri|helena|paulina|monica|victoria|samantha|eva/i.test(v.name)
+                );
+                if (femaleVoice) return femaleVoice;
+            }
+
+            if (selectedVoice === 'male') {
+                const maleVoice = candidates.find(v =>
+                    /male|man|david|mark|jorge|diego|carlos|alex|daniel|thomas|fred/i.test(v.name)
+                );
+                if (maleVoice) return maleVoice;
+            }
+
+            return candidates[0] || null;
+        }
+
+        function speakText(text, rate = 0.85) {
+            if (!('speechSynthesis' in window)) return;
+            if (selectedVoice === 'none') return;
+
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
+            utterance.rate = rate;
+
+            const chosenVoice = pickBestVoice();
+            if (chosenVoice) {
+                utterance.voice = chosenVoice;
+            }
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
 
         function initTest() {
             setTimeout(() => {
@@ -374,12 +430,7 @@
                     stimulusEl.textContent = symbol;
                     stimulusEl.classList.add('active');
 
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(symbol);
-                        utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
-                        utterance.rate = 0.8;
-                        speechSynthesis.speak(utterance);
-                    }
+                    speakText(symbol, 0.8);
 
                     currentIndex++;
 
@@ -423,7 +474,6 @@
             startTime = Date.now();
         }
 
-        // FLASH ONLY, THEN RETURN TO ORIGINAL LOOK
         function selectSymbol(symbol, button) {
             if (button.disabled || button.classList.contains('flash')) return;
 
@@ -433,28 +483,20 @@
 
             setTimeout(() => {
                 button.classList.remove('flash');
-                button.disabled = true; // disabled but stays original color because opacity is 1
+                button.disabled = true;
             }, 220);
 
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(symbol);
-                utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
-                utterance.rate = 0.9;
-                speechSynthesis.speak(utterance);
-            }
+            speakText(symbol, 0.9);
 
             document.getElementById('user-response').innerHTML =
                 `<strong>${t.yourResponse}</strong> ${userResponse.join(' - ')}`;
         }
 
-        // Returns the PPST-correct expected answer for a trial.
-        // Digit: digits sorted numerically. Mixed: digits ascending, then letters alphabetically.
-        // Server always recomputes authoritatively -- this is for client-side feedback only.
         function computeCorrectResponse(sequence, type) {
             if (type === 'digit') {
                 return [...sequence].sort((a, b) => parseInt(a) - parseInt(b));
             }
-            const digits  = sequence.filter(s => /^\d$/.test(s)).sort((a, b) => parseInt(a) - parseInt(b));
+            const digits = sequence.filter(s => /^\d$/.test(s)).sort((a, b) => parseInt(a) - parseInt(b));
             const letters = sequence.filter(s => /^[A-Za-z]$/.test(s)).sort();
             return [...digits, ...letters];
         }
@@ -464,8 +506,6 @@
 
             const responseTime = Date.now() - startTime;
             const trial = testTrials[currentTrialIndex];
-
-            // Compare against PPST-reordered correct answer, not raw stimulus order
             const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
             const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
 

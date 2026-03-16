@@ -224,8 +224,8 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const language = urlParams.get('lang') || 'en';
+        const language = "{{ language|default:'en'|escapejs }}";
+        const voice = "{{ voice|default:'male'|escapejs }}";
 
         const translations = {
             en: {
@@ -246,56 +246,53 @@
                 exampleResponse2: "<strong>Your response:</strong> Click 2, then 5, then 8, then A, then B, then C",
                 noteTest: "<strong>Test Information:</strong> You will complete 12 test trials. These trials will be scored. Take your time and do your best.",
                 instructionsReady: "Click the button below when you are ready to begin the test.",
-                btnText: "Start Test"
+                buttonText: "Start Test"
             },
             es: {
                 headerTitle: "CogniFlow",
                 headerSubtitle: "Prueba de Amplitud de Señalamiento de Filadelfia - Instrucciones",
                 instructionsTitle: "Cómo Funciona Esta Prueba",
-                instructionsIntro: "Se le presentarán secuencias de números y letras. Su tarea es recordarlas y luego hacer clic primero en los números en orden ascendente y después en las letras en orden alfabético.",
+                instructionsIntro: "Se le presentarán secuencias de números y letras. Su tarea es recordarlas y luego hacer clic en los números en orden ascendente seguidos de las letras en orden alfabético.",
                 stepsTitle: "Qué Esperar:",
-                step1: "<strong>Observar y Escuchar:</strong> Una secuencia de números o letras aparecerá en la pantalla uno a la vez y se leerá en voz alta.",
-                step2: "<strong>Recordar:</strong> Preste mucha atención y recuerde la secuencia que ve y escucha.",
-                step3: "<strong>Responder:</strong> Después de presentar la secuencia, haga clic primero en los números en orden ascendente y luego en las letras en orden alfabético.",
+                step1: "<strong>Observe y Escuche:</strong> Una secuencia de números o letras aparecerá en la pantalla una a la vez y será leída en voz alta.",
+                step2: "<strong>Recuerde:</strong> Preste mucha atención y recuerde la secuencia que ve y escucha.",
+                step3: "<strong>Responda:</strong> Después de que se presente la secuencia, haga clic en los números en orden ascendente y luego en las letras en orden alfabético.",
                 step4: "<strong>Retroalimentación:</strong> Durante la práctica, recibirá retroalimentación sobre sus respuestas.",
                 exampleTitle1: "Ejemplo 1:",
                 exampleShown1: "<strong>Secuencia mostrada:</strong> 5 - 2 - 8",
-                exampleResponse1: "<strong>Su respuesta:</strong> Haga clic en 2, luego 5, luego 8",
+                exampleResponse1: "<strong>Su respuesta:</strong> Haga clic en 2, luego en 5 y después en 8",
                 exampleTitle2: "Ejemplo 2:",
                 exampleShown2: "<strong>Secuencia mostrada:</strong> 5 - A - 2 - C - 8 - B",
-                exampleResponse2: "<strong>Su respuesta:</strong> Haga clic en 2, luego 5, luego 8, luego A, luego B, luego C",
-                noteTest: "<strong>Información de la Prueba:</strong> Completará 12 pruebas. Estas pruebas serán calificadas. Tómese su tiempo y haga lo mejor que pueda.",
+                exampleResponse2: "<strong>Su respuesta:</strong> Haga clic en 2, luego en 5, después en 8, luego en A, en B y en C",
+                noteTest: "<strong>Información de la Prueba:</strong> Completará 12 pruebas. Estas pruebas serán calificadas. Tómese su tiempo y haga su mejor esfuerzo.",
                 instructionsReady: "Haga clic en el botón de abajo cuando esté listo para comenzar la prueba.",
-                btnText: "Comenzar Prueba"
+                buttonText: "Comenzar Prueba"
             }
         };
 
         const t = translations[language] || translations.en;
 
-        document.getElementById('header-title').textContent = t.headerTitle;
-        document.getElementById('header-subtitle').textContent = t.headerSubtitle;
-        document.getElementById('instructions-title').textContent = t.instructionsTitle;
-        document.getElementById('instructions-intro').textContent = t.instructionsIntro;
-        document.getElementById('steps-title').textContent = t.stepsTitle;
-        document.getElementById('step-1').innerHTML = t.step1;
-        document.getElementById('step-2').innerHTML = t.step2;
-        document.getElementById('step-3').innerHTML = t.step3;
-        document.getElementById('step-4').innerHTML = t.step4;
+        document.getElementById("header-title").textContent = t.headerTitle;
+        document.getElementById("header-subtitle").textContent = t.headerSubtitle;
+        document.getElementById("instructions-title").textContent = t.instructionsTitle;
+        document.getElementById("instructions-intro").textContent = t.instructionsIntro;
+        document.getElementById("steps-title").textContent = t.stepsTitle;
+        document.getElementById("step-1").innerHTML = t.step1;
+        document.getElementById("step-2").innerHTML = t.step2;
+        document.getElementById("step-3").innerHTML = t.step3;
+        document.getElementById("step-4").innerHTML = t.step4;
+        document.getElementById("example-title-1").textContent = t.exampleTitle1;
+        document.getElementById("example-shown-1").innerHTML = t.exampleShown1;
+        document.getElementById("example-response-1").innerHTML = t.exampleResponse1;
+        document.getElementById("example-title-2").textContent = t.exampleTitle2;
+        document.getElementById("example-shown-2").innerHTML = t.exampleShown2;
+        document.getElementById("example-response-2").innerHTML = t.exampleResponse2;
+        document.getElementById("note-test").innerHTML = t.noteTest;
+        document.getElementById("instructions-ready").textContent = t.instructionsReady;
+        document.getElementById("btn-text").textContent = t.buttonText;
 
-        document.getElementById('example-title-1').textContent = t.exampleTitle1;
-        document.getElementById('example-shown-1').innerHTML = t.exampleShown1;
-        document.getElementById('example-response-1').innerHTML = t.exampleResponse1;
-
-        document.getElementById('example-title-2').textContent = t.exampleTitle2;
-        document.getElementById('example-shown-2').innerHTML = t.exampleShown2;
-        document.getElementById('example-response-2').innerHTML = t.exampleResponse2;
-
-        document.getElementById('note-test').innerHTML = t.noteTest;
-        document.getElementById('instructions-ready').textContent = t.instructionsReady;
-        document.getElementById('btn-text').textContent = t.btnText;
-
-        document.getElementById('start-practice-btn').onclick = function () {
-            window.location.href = '/test/actual?lang=' + language;
+        document.getElementById("start-practice-btn").onclick = function () {
+            window.location.href = "{% url 'test_actual' %}?lang=" + encodeURIComponent(language) + "&voice=" + encodeURIComponent(voice);
         };
     </script>
 </body>
