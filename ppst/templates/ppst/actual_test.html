@@ -263,8 +263,7 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const language = urlParams.get('lang') || 'en';
+        const language = "{{ language|default:'en' }}";
 
         // PPST spec: 6 digit trials (3 x 4-span, 3 x 5-span)
         //            6 mixed trials (3 x 4-span, 3 x 5-span)

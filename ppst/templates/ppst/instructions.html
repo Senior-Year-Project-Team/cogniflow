@@ -222,8 +222,7 @@
 
     <script>
         // Multi-language support
-        const urlParams = new URLSearchParams(window.location.search);
-        const language = urlParams.get('lang') || 'en';
+        const language = "{{ language|default:'en' }}";
 
         const translations = {
             en: {
@@ -282,8 +281,8 @@
 
         // Update button link with language parameter
         document.getElementById('start-practice-btn').onclick = function() {
-            window.location.href = '/test/actual?lang=' + language;
-        };
+    window.location.href = '/test/actual/';
+};
     </script>
 </body>
 </html>
