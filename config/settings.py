@@ -67,3 +67,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 PASSWORD_RESET_TIMEOUT = 180  # 3 minutes (in seconds)
+
+# Session settings — Remember Me
+SESSION_COOKIE_AGE = 1209600          # 2 weeks in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True 

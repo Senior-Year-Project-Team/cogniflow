@@ -224,8 +224,8 @@
     </div>
 
     <script>
-        const language = "{{ language|default:'en'|escapejs }}";
-        const voice = "{{ voice|default:'male'|escapejs }}";
+        // Multi-language support
+        const language = "{{ language|default:'en' }}";
 
         const translations = {
             en: {
@@ -272,28 +272,32 @@
 
         const t = translations[language] || translations.en;
 
-        document.getElementById("header-title").textContent = t.headerTitle;
-        document.getElementById("header-subtitle").textContent = t.headerSubtitle;
-        document.getElementById("instructions-title").textContent = t.instructionsTitle;
-        document.getElementById("instructions-intro").textContent = t.instructionsIntro;
-        document.getElementById("steps-title").textContent = t.stepsTitle;
-        document.getElementById("step-1").innerHTML = t.step1;
-        document.getElementById("step-2").innerHTML = t.step2;
-        document.getElementById("step-3").innerHTML = t.step3;
-        document.getElementById("step-4").innerHTML = t.step4;
-        document.getElementById("example-title-1").textContent = t.exampleTitle1;
-        document.getElementById("example-shown-1").innerHTML = t.exampleShown1;
-        document.getElementById("example-response-1").innerHTML = t.exampleResponse1;
-        document.getElementById("example-title-2").textContent = t.exampleTitle2;
-        document.getElementById("example-shown-2").innerHTML = t.exampleShown2;
-        document.getElementById("example-response-2").innerHTML = t.exampleResponse2;
-        document.getElementById("note-test").innerHTML = t.noteTest;
-        document.getElementById("instructions-ready").textContent = t.instructionsReady;
-        document.getElementById("btn-text").textContent = t.buttonText;
+        document.getElementById('header-title').textContent = t.headerTitle;
+        document.getElementById('header-subtitle').textContent = t.headerSubtitle;
+        document.getElementById('instructions-title').textContent = t.instructionsTitle;
+        document.getElementById('instructions-intro').textContent = t.instructionsIntro;
+        document.getElementById('steps-title').textContent = t.stepsTitle;
+        document.getElementById('step-1').innerHTML = t.step1;
+        document.getElementById('step-2').innerHTML = t.step2;
+        document.getElementById('step-3').innerHTML = t.step3;
+        document.getElementById('step-4').innerHTML = t.step4;
 
-        document.getElementById("start-practice-btn").onclick = function () {
-            window.location.href = "{% url 'test_actual' %}?lang=" + encodeURIComponent(language) + "&voice=" + encodeURIComponent(voice);
-        };
+        document.getElementById('example-title-1').textContent = t.exampleTitle1;
+        document.getElementById('example-shown-1').innerHTML = t.exampleShown1;
+        document.getElementById('example-response-1').innerHTML = t.exampleResponse1;
+
+        document.getElementById('example-title-2').textContent = t.exampleTitle2;
+        document.getElementById('example-shown-2').innerHTML = t.exampleShown2;
+        document.getElementById('example-response-2').innerHTML = t.exampleResponse2;
+
+        document.getElementById('note-test').innerHTML = t.noteTest;
+        document.getElementById('instructions-ready').textContent = t.instructionsReady;
+        document.getElementById('btn-text').textContent = t.btnText;
+
+        // Update button link with language parameter
+        document.getElementById('start-practice-btn').onclick = function() {
+    window.location.href = '/test/actual/';
+};
     </script>
 </body>
 </html>

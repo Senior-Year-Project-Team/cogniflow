@@ -4,8 +4,9 @@ from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import TestSession, TrialResponse
 
@@ -39,9 +40,14 @@ def login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
+            # Remember Me — extend session to 2 weeks if checkbox ticked
+            if request.POST.get("remember_me"):
+                request.session.set_expiry(1209600)  # 2 weeks
+            else:
+                request.session.set_expiry(0)  # expires on browser close
             return redirect("clinician_dashboard")
-        # Invalid credentials — re-render with error
-        return render(request, "ppst/login.html", {"error": "Invalid username or password."})
+            # Invalid credentials — re-render with error
+            return render(request, "ppst/login.html", {"error": "Invalid username or password."})
 
     return render(request, "ppst/login.html")
 
@@ -164,7 +170,12 @@ def patient_access(request, access_token):
            confirmation page and let them begin.
     POST — Patient clicks Begin. Store session info and redirect to instructions.
     """
-    session = get_object_or_404(TestSession, access_token=access_token, is_completed=False)
+    expiry_time = timezone.now() - timedelta(hours=48)
+    session = get_object_or_404(
+    TestSession,
+    access_token=access_token,
+    is_completed=False,
+    created_at__gte=expiry_time)
 
     if request.method == "POST":
         request.session["test_session_id"] = session.pk
@@ -222,7 +233,6 @@ def _compute_correct_response(stimulus: list, trial_type: str) -> list:
 # ---------------------------------------------------------------------------
 
 @require_POST
-@csrf_exempt   # swap for csrf_protect + JS CSRF token once you wire the cookie
 def submit_results(request):
     """
     Receives the 12 trial results as JSON from actual_test.html and persists
@@ -312,7 +322,11 @@ def clinician_dashboard(request):
     # Sessions belonging to this clinician
     all_sessions       = TestSession.objects.filter(clinician=clinician)
     completed_sessions = all_sessions.filter(is_completed=True)
-    pending_sessions   = all_sessions.filter(is_completed=False).order_by("-created_at")[:10]
+    
+    expiry_time = timezone.now() - timedelta(hours=48)
+    pending_sessions = all_sessions.filter(
+    is_completed=False,
+    created_at__gte=expiry_time).order_by("-created_at")[:10]
 
     # Aggregate summary stats
     stats = TrialResponse.objects.filter(
@@ -356,6 +370,25 @@ def clinician_dashboard(request):
             ),
         })
 
+    # Age bracket stats — all completed tests in the system (population norms)
+    all_completed = TestSession.objects.filter(is_completed=True)
+    bracket_stats = []
+    for bracket, label in TestSession.AGE_BRACKET_CHOICES:
+        bracket_sessions = all_completed.filter(age_bracket=bracket)
+        bracket_responses = TrialResponse.objects.filter(session__in=bracket_sessions)
+        count = bracket_sessions.count()
+        if count > 0:
+            correct = bracket_responses.filter(is_correct=True).count()
+            total_responses = bracket_responses.count()
+            avg_lat = bracket_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0
+            correct_pct = round(correct / total_responses * 100) if total_responses else 0
+            bracket_stats.append({
+                "bracket":      label,
+                "count":        count,
+                "correct_pct":  correct_pct,
+                "avg_latency":  round(avg_lat),
+            })
+
     context = {
         "total_tests":          total,
         "mean_correct_percent": mean_correct,
@@ -363,6 +396,7 @@ def clinician_dashboard(request):
         "age_bracket_count":    completed_sessions.values("age_bracket").distinct().count(),
         "recent_results":       recent_results,
         "pending_rows":         pending_rows,
+        "bracket_stats":        bracket_stats,
         "generate_url":         request.build_absolute_uri(reverse("generate_session")),
     }
     return render(request, "ppst/clinician_dashboard.html", context)

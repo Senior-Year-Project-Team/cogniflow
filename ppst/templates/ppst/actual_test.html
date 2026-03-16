@@ -260,9 +260,7 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const language = urlParams.get('lang') || "{{ language|default:'en'|escapejs }}";
-        const selectedVoice = urlParams.get('voice') || "{{ voice|default:'male'|escapejs }}";
+        const language = "{{ language|default:'en' }}";
 
         const testTrials = [
             { sequence: ['3', '9', '1', '7'],      type: 'digit' },
