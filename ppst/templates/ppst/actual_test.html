@@ -122,11 +122,6 @@
             color: #ffffff;
         }
 
-        .response-button.selected {
-            background: #003d7a;
-            color: white;
-        }
-
         .response-button:disabled {
             opacity: 1;
             cursor: not-allowed;
@@ -260,21 +255,22 @@
     </div>
 
     <script>
-        const language = "{{ language|default:'en' }}";
+        const language = "{{ language|default:'en'|escapejs }}";
+        const selectedVoice = "{{ voice|default:'male'|escapejs }}";
 
         const testTrials = [
-            { sequence: ['3', '9', '1', '7'],      type: 'digit' },
-            { sequence: ['6', '2', '8', '4'],      type: 'digit' },
-            { sequence: ['5', '1', '9', '3'],      type: 'digit' },
+            { sequence: ['3', '9', '1', '7'], type: 'digit' },
+            { sequence: ['6', '2', '8', '4'], type: 'digit' },
+            { sequence: ['5', '1', '9', '3'], type: 'digit' },
             { sequence: ['7', '2', '5', '9', '1'], type: 'digit' },
             { sequence: ['4', '8', '1', '6', '3'], type: 'digit' },
             { sequence: ['9', '3', '6', '2', '8'], type: 'digit' },
-            { sequence: ['5', 'R', '2', 'B'],      type: 'mixed' },
-            { sequence: ['T', '7', 'D', '4'],      type: 'mixed' },
-            { sequence: ['8', 'N', '1', 'K'],      type: 'mixed' },
+            { sequence: ['5', 'R', '2', 'B'], type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4'], type: 'mixed' },
+            { sequence: ['8', 'N', '1', 'K'], type: 'mixed' },
             { sequence: ['T', '7', 'D', '4', 'N'], type: 'mixed' },
             { sequence: ['9', 'L', '3', 'F', '6'], type: 'mixed' },
-            { sequence: ['M', '2', 'S', '8', 'C'], type: 'mixed' },
+            { sequence: ['M', '2', 'S', '8', 'C'], type: 'mixed' }
         ];
 
         const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -332,21 +328,15 @@
         }
 
         function pickBestVoice() {
-            if (!availableVoices.length) return null;
+            if (!availableVoices || !availableVoices.length) return null;
 
             const langPrefix = language === 'es' ? 'es' : 'en';
-
             let candidates = availableVoices.filter(v =>
                 v.lang && v.lang.toLowerCase().startsWith(langPrefix)
             );
 
-            if (!candidates.length) {
-                candidates = availableVoices;
-            }
-
-            if (selectedVoice === 'none') {
-                return null;
-            }
+            if (!candidates.length) return null;
+            if (selectedVoice === 'none') return null;
 
             if (selectedVoice === 'female') {
                 const femaleVoice = candidates.find(v =>
@@ -365,22 +355,63 @@
             return candidates[0] || null;
         }
 
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         function speakText(text, rate = 0.85) {
-            if (!('speechSynthesis' in window)) return;
-            if (selectedVoice === 'none') return;
+            return new Promise((resolve) => {
+                try {
+                    if (!('speechSynthesis' in window)) {
+                        resolve();
+                        return;
+                    }
 
-            window.speechSynthesis.cancel();
+                    if (selectedVoice === 'none') {
+                        resolve();
+                        return;
+                    }
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
-            utterance.rate = rate;
+                    window.speechSynthesis.cancel();
 
-            const chosenVoice = pickBestVoice();
-            if (chosenVoice) {
-                utterance.voice = chosenVoice;
-            }
+                    const utterance = new SpeechSynthesisUtterance(String(text));
+                    utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
+                    utterance.rate = rate;
 
-            window.speechSynthesis.speak(utterance);
+                    const chosenVoice = pickBestVoice();
+                    if (chosenVoice) {
+                        utterance.voice = chosenVoice;
+                    }
+
+                    let finished = false;
+
+                    utterance.onend = () => {
+                        if (!finished) {
+                            finished = true;
+                            resolve();
+                        }
+                    };
+
+                    utterance.onerror = () => {
+                        if (!finished) {
+                            finished = true;
+                            resolve();
+                        }
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+
+                    setTimeout(() => {
+                        if (!finished) {
+                            finished = true;
+                            resolve();
+                        }
+                    }, 1200);
+                } catch (error) {
+                    console.error('Speech error:', error);
+                    resolve();
+                }
+            });
         }
 
         if ('speechSynthesis' in window) {
@@ -394,12 +425,12 @@
             }, 1500);
         }
 
-        function startTrial() {
+        async function startTrial() {
             const trial = testTrials[currentTrialIndex];
             userResponse = [];
 
             if ('speechSynthesis' in window) {
-                speechSynthesis.cancel();
+                window.speechSynthesis.cancel();
             }
 
             const progress = ((currentTrialIndex + 1) / testTrials.length) * 100;
@@ -412,38 +443,26 @@
             document.getElementById('user-response').textContent = '';
             hideAllButtons();
 
-            setTimeout(() => {
-                showStimulus(trial.sequence);
-            }, 1000);
+            await delay(1000);
+            await showStimulus(trial.sequence);
         }
 
-        function showStimulus(sequence) {
-            let currentIndex = 0;
+        async function showStimulus(sequence) {
             const stimulusEl = document.getElementById('stimulus');
 
-            function showNextSymbol() {
-                if (currentIndex < sequence.length) {
-                    const symbol = sequence[currentIndex];
+            for (const symbol of sequence) {
+                stimulusEl.textContent = symbol;
+                stimulusEl.classList.add('active');
 
-                    stimulusEl.textContent = symbol;
-                    stimulusEl.classList.add('active');
+                await speakText(symbol, 0.8);
+                await delay(250);
 
-                    speakText(symbol, 0.8);
-
-                    currentIndex++;
-
-                    setTimeout(() => {
-                        stimulusEl.classList.remove('active');
-                        setTimeout(showNextSymbol, 200);
-                    }, 1000);
-                } else {
-                    setTimeout(() => {
-                        showResponseGrid(testTrials[currentTrialIndex].type);
-                    }, 500);
-                }
+                stimulusEl.classList.remove('active');
+                await delay(200);
             }
 
-            showNextSymbol();
+            await delay(400);
+            showResponseGrid(testTrials[currentTrialIndex].type);
         }
 
         function showResponseGrid(type) {
@@ -476,7 +495,6 @@
             if (button.disabled || button.classList.contains('flash')) return;
 
             userResponse.push(symbol);
-
             button.classList.add('flash');
 
             setTimeout(() => {
