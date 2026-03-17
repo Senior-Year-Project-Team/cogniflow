@@ -209,7 +209,7 @@
             <div class="subtitle">Philadelphia Pointing Span Test</div>
             <a href="/logout/" style="color:#003d7a;font-weight:600;font-size:0.9rem;text-decoration:none;border:1px solid #003d7a;padding:6px 14px;border-radius:3px;">Sign out</a>
         </div>
-        
+
         <div class="container">
             <div class="sidebar">
                 <a href="#overview">Overview</a>
@@ -217,7 +217,7 @@
                 <a href="#results">Scored Results</a>
                 <a href="#age-stats">Age Bracket Stats</a>
             </div>
-            
+
             <div class="main-content">
                 <div class="card" id="overview">
                     <h2>Test Performance Overview</h2>
@@ -263,8 +263,8 @@
                                 <td>{{ row.avg_latency }}</td>
                             </tr>
                             {% empty %}
-                            <tr>        
-                                <td colspan="4">No data available yet.</td>
+                            <tr>
+                                <td colspan="4">No age bracket data available yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -283,6 +283,7 @@
                                 <option value="es">Español (Spanish)</option>
                             </select>
                         </div>
+
                         <div class="field-group" style="flex:1">
                             <label class="field-label" for="gen-voice">Audio Voice</label>
                             <select class="field-input" id="gen-voice">
@@ -291,13 +292,10 @@
                                 <option value="none">No Voice</option>
                             </select>
                         </div>
+
                         <div class="field-group" style="flex:1">
                             <label class="field-label" for="gen-dob">Patient Date of Birth</label>
-                            <input class="field-input" type="text" id="gen-dob"
-                                   placeholder="MM/DD/YYYY" maxlength="10" autocomplete="off">
-                            <small style="color:#888; font-size:0.8rem;">
-                                Not stored — used only to derive age bracket.
-                            </small>
+                            <input class="field-input" type="date" id="gen-dob" autocomplete="off">
                         </div>
                     </div>
 
@@ -379,67 +377,115 @@
             </div>
         </div>
     </div>
-    <script>
-        // ── Auto-format DOB as clinician types ────────────────────────────
-        document.getElementById('gen-dob').addEventListener('input', function () {
-            var digits = this.value.replace(/\D/g, '');
-            if (digits.length >= 3) digits = digits.slice(0, 2) + '/' + digits.slice(2);
-            if (digits.length >= 6) digits = digits.slice(0, 5) + '/' + digits.slice(5, 9);
-            this.value = digits;
-        });
 
-        // ── Generate patient link ──────────────────────────────────────────
-        document.getElementById('gen-btn').addEventListener('click', function () {
-            var language = document.getElementById('gen-language').value;
-            var voice    = document.getElementById('gen-voice').value;
-            var dob      = document.getElementById('gen-dob').value;
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const dobInput = document.getElementById('gen-dob');
+        dobInput.max = new Date().toISOString().split('T')[0];
+
+        const genBtn = document.getElementById('gen-btn');
+        const genResult = document.getElementById('gen-result');
+        const genLinkInput = document.getElementById('gen-link-input');
+        const copyGenBtn = document.getElementById('copy-gen-btn');
+        const csrftoken = getCookie('csrftoken');
+
+        genBtn.addEventListener('click', async function () {
+            const language = document.getElementById('gen-language').value;
+            const voice = document.getElementById('gen-voice').value;
+            const dob = document.getElementById('gen-dob').value;
 
             if (!dob) {
-                alert('Please enter the patient\'s date of birth.');
+                alert("Please select the patient's date of birth.");
                 return;
             }
 
-            var formData = new FormData();
+            const formData = new FormData();
             formData.append('language', language);
             formData.append('voice', voice);
             formData.append('dob', dob);
-            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-            fetch("{% url 'generate_session' %}", {
-                method: 'POST',
-                body: formData,
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.url) {
-                    document.getElementById('gen-link-input').value = data.url;
-                    document.getElementById('gen-result').style.display = 'block';
-                    document.getElementById('gen-dob').value = '';  // clear DOB immediately
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(function () { alert('Network error. Please try again.'); });
-        });
-
-        // ── Copy generated link ────────────────────────────────────────────
-        document.getElementById('copy-gen-btn').addEventListener('click', function () {
-            var input = document.getElementById('gen-link-input');
-            input.select();
-            document.execCommand('copy');
-            this.textContent = 'Copied!';
-            var btn = this;
-            setTimeout(function () { btn.textContent = 'Copy Link'; }, 1200);
-        });
-
-        // ── Copy pending session links ─────────────────────────────────────
-        document.querySelectorAll('.copy-pending-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var url = this.getAttribute('data-url');
-                navigator.clipboard.writeText(url).then(function () {
-                    btn.textContent = 'Copied!';
-                    setTimeout(function () { btn.textContent = 'Copy Link'; }, 1200);
+            try {
+                const response = await fetch("{% url 'generate_session' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
                 });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert("Error: " + (data.error || "Request failed."));
+                    return;
+                }
+
+                if (data.url) {
+                    genLinkInput.value = data.url;
+                    genResult.style.display = 'block';
+                    document.getElementById('gen-dob').value = '';
+                } else {
+                    alert("Error: No link was returned by the server.");
+                }
+            } catch (error) {
+                console.error("Generate link error:", error);
+                alert("Something went wrong while generating the link.");
+            }
+        });
+
+        copyGenBtn.addEventListener('click', async function () {
+            const url = genLinkInput.value;
+
+            if (!url) {
+                alert("No link to copy yet.");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(url);
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = 'Copy Link';
+                }, 1200);
+            } catch (err) {
+                genLinkInput.select();
+                genLinkInput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = 'Copy Link';
+                }, 1200);
+            }
+        });
+
+        document.querySelectorAll('.copy-pending-btn').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                const url = this.getAttribute('data-url');
+
+                try {
+                    await navigator.clipboard.writeText(url);
+                    btn.textContent = 'Copied!';
+                    setTimeout(function () {
+                        btn.textContent = 'Copy Link';
+                    }, 1200);
+                } catch (err) {
+                    alert("Could not copy the link.");
+                }
             });
         });
     </script>
