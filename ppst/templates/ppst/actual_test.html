@@ -338,13 +338,13 @@
 
         // Practice trials — shown before scored trials, not saved to DB
         const practiceDigitTrials = [
-            { sequence: ['4', '2'],         type: 'digit', practice: true },
-            { sequence: ['7', '1', '5'],     type: 'digit', practice: true },
+            { sequence: ['4', '2', '8', '1'],   type: 'digit', practice: true },
+            { sequence: ['7', '3', '5', '9'],   type: 'digit', practice: true },
         ];
 
         const practiceMixedTrials = [
-            { sequence: ['3', 'A'],          type: 'mixed', practice: true },
-            { sequence: ['B', '6', 'M'],     type: 'mixed', practice: true },
+            { sequence: ['3', 'A', '6', 'K'],   type: 'mixed', practice: true },
+            { sequence: ['B', '4', 'M', '2'],   type: 'mixed', practice: true },
         ];
 
         const testTrials = [
@@ -397,6 +397,8 @@
                 transitionTitleDigit: "Practice Complete",
                 transitionMsgDigit: "You have completed the digit practice trials. The actual digit test will now begin. Your responses will be recorded.",
                 transitionTitleMixed: "Practice Complete",
+                transitionTitleMixedPractice: "Mixed Trials Practice",
+                transitionMsgMixedPractice: "You will now complete 2 practice trials with letters and numbers mixed together. These will not be recorded.",  
                 transitionMsgMixed: "You have completed the mixed practice trials. The actual mixed test will now begin. Your responses will be recorded.",
                 beginTest: "Begin Test"
             },
@@ -417,6 +419,8 @@
                 feedbackIncorrect: "No exactamente. El orden correcto era: ",
                 transitionTitleDigit: "Práctica Completa",
                 transitionMsgDigit: "Ha completado los ensayos de práctica de dígitos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
+                transitionTitleMixedPractice: "Práctica de Pruebas Mixtas",
+                transitionMsgMixedPractice: "Ahora completará 2 ensayos de práctica con letras y números mezclados. Estos no serán registrados.",
                 transitionTitleMixed: "Práctica Completa",
                 transitionMsgMixed: "Ha completado los ensayos de práctica mixtos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
                 beginTest: "Comenzar Prueba"
@@ -577,23 +581,39 @@
             const ts = document.getElementById('transition-screen');
             ts.classList.add('active');
             if (type === 'digit') {
+                // After digit practice — start scored digit trials
                 document.getElementById('transition-title').textContent = t.transitionTitleDigit;
                 document.getElementById('transition-message').textContent = t.transitionMsgDigit;
+                document.getElementById('transition-btn').onclick = function () {
+                    ts.classList.remove('active');
+                    document.getElementById('test-interface').style.display = 'block';
+                    phase = 'test';
+                    currentTrialIndex = 0;
+                    startTrial();
+                };
+            } else if (type === 'mixed-practice') {
+                // After digit scored trials — start mixed practice
+                document.getElementById('transition-title').textContent = t.transitionTitleMixedPractice;
+                document.getElementById('transition-message').textContent = t.transitionMsgMixedPractice;
+                document.getElementById('transition-btn').onclick = function () {
+                    ts.classList.remove('active');
+                    document.getElementById('test-interface').style.display = 'block';
+                    startPracticeTrial();
+                };
             } else {
+                // After mixed practice — start scored mixed trials
                 document.getElementById('transition-title').textContent = t.transitionTitleMixed;
                 document.getElementById('transition-message').textContent = t.transitionMsgMixed;
+                document.getElementById('transition-btn').onclick = function () {
+                    ts.classList.remove('active');
+                    document.getElementById('test-interface').style.display = 'block';
+                    phase = 'test';
+                    currentTrialIndex = 6;
+                    startTrial();
+                };
             }
             document.getElementById('transition-btn').textContent = t.beginTest;
         }
-
-        document.getElementById('transition-btn').onclick = function () {
-            document.getElementById('transition-screen').classList.remove('active');
-            document.getElementById('test-interface').style.display = 'block';
-            // After digit practice, start scored digit trials
-            phase = 'test';
-            currentTrialIndex = 0;
-            startTrial();
-        };
 
         // ── Scored trial functions ─────────────────────────────────────────
 
@@ -763,17 +783,7 @@
                     phase = 'practice-mixed';
                     practiceIndex = 0;
                     setTimeout(() => {
-                        document.getElementById('test-interface').style.display = 'none';
-                        const ts = document.getElementById('transition-screen');
-                        ts.classList.add('active');
-                        document.getElementById('transition-title').textContent = t.transitionTitleMixed;
-                        document.getElementById('transition-message').textContent = t.transitionMsgMixed;
-                        document.getElementById('transition-btn').textContent = t.beginTest;
-                        document.getElementById('transition-btn').onclick = function () {
-                            ts.classList.remove('active');
-                            document.getElementById('test-interface').style.display = 'block';
-                            startPracticeTrial();
-                        };
+                        showTransitionScreen('mixed-practice');
                     }, 800);
                 } else if (currentTrialIndex < testTrials.length - 1) {
                     document.getElementById('next-btn').classList.add('active');
