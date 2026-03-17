@@ -178,6 +178,12 @@
 
       <form method="post" action="">
         {% csrf_token %}
+        {% if error %}
+        <div
+          style="background:#fff0f0;border:1px solid #f5c6cb;border-left:4px solid #c0392b;color:#c0392b;font-size:0.88rem;padding:10px 14px;border-radius:3px;margin-bottom:16px;">
+          {{ error }}
+        </div>
+        {% endif %}
         <div class="form-group">
           <label for="full_name">Full name</label>
           <input

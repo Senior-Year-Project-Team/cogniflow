@@ -223,6 +223,12 @@
                     <h2>Test Performance Overview</h2>
                     <p>This dashboard displays PPST test outcomes using anonymized patient records. Raw data include item responses and response latencies. Derived outcomes include scoring measures such as correct response percentage.</p>
                     <div class="grid">
+                        {% if total_tests == 0 %}
+                        <div
+                            style="margin-top:16px;padding:12px 14px;background:#f9f9f9;border:1px solid #e0e0e0;border-left:4px solid #003d7a;color:#555;font-size:0.92rem;line-height:1.5;">
+                            No tests yet. Generate your first patient link to begin collecting PPST results.
+                        </div>
+                        {% endif %}
                         <div class="metric">
                             <h3>Total Tests Completed</h3>
                             <div class="value">{{ total_tests|default:"0" }}</div>
