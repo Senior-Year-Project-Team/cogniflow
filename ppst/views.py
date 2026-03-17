@@ -1,14 +1,15 @@
 import json
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db.models import Avg
 from django.views.decorators.http import require_POST
-from django.utils import timezone
-from datetime import timedelta
-
-from .models import TestSession, TrialResponse
+from .models import TestSession, TrialResponse, Clinician
 
 
 # ---------------------------------------------------------------------------
@@ -31,9 +32,6 @@ def patient_link_entry(request):
 
 def login(request):
     """Login page for clinicians."""
-    from django.contrib.auth import authenticate
-    from django.contrib.auth import login as auth_login
-
     if request.method == "POST":
         username = request.POST.get("username", "")
         password = request.POST.get("password", "")
@@ -47,21 +45,19 @@ def login(request):
                 request.session.set_expiry(0)  # expires on browser close
             return redirect("clinician_dashboard")
             # Invalid credentials — re-render with error
-            return render(request, "ppst/login.html", {"error": "Invalid username or password."})
+        return render(request, "ppst/login.html", {"error": "Invalid username or password."})
 
     return render(request, "ppst/login.html")
 
 def logout_view(request):
     """Log out the current clinician and redirect to login."""
-    from django.contrib.auth import logout
+    
     logout(request)
     return redirect("login")
 
 def clinician_register(request):
     """Registration page for new clinicians."""
-    from django.contrib.auth.models import User
-    from .models import Clinician
-
+    
     if request.method == "POST":
         full_name = request.POST.get("full_name", "").strip()
         email     = request.POST.get("email", "").strip()
@@ -315,7 +311,6 @@ def submit_results(request):
 @login_required(login_url="/login/")
 def clinician_dashboard(request):
     """Dashboard for clinicians to view results and administer new tests."""
-    from django.db.models import Avg
 
     clinician = getattr(request.user, "clinician", None)
 
@@ -408,12 +403,22 @@ def clinician_dashboard(request):
 
 @login_required(login_url="/login/")
 def export_session(request, access_token):
-    """Export all trial responses for a single session as a CSV download."""
     clinician = getattr(request.user, "clinician", None)
     session   = get_object_or_404(TestSession, access_token=access_token, clinician=clinician)
     responses = session.trial_responses.all()
 
-    lines = ["trial_number,trial_type,stimulus,response,correct,latency_ms"]
+    # ── Session info header ───────────────────────────────────────────
+    lines = [
+        f"# CogniFlow PPST — Session Report",
+        f"# Patient ID:,P-{session.pk:04d}",
+        f"# Age Bracket:,{session.age_bracket}",
+        f"# Language:,{session.get_language_display()}",
+        f"# Test Date:,{session.completed_at.strftime('%Y-%m-%d %H:%M') if session.completed_at else 'N/A'}",
+        f"#",
+    ]
+
+    # ── Raw trial data ────────────────────────────────────────────────
+    lines.append("trial_number,trial_type,stimulus,response,correct,latency_ms")
     for r in responses:
         lines.append(
             f"{r.trial_number},{r.trial_type},"
@@ -421,6 +426,45 @@ def export_session(request, access_token):
             f"\"{r.patient_response}\","
             f"{r.is_correct},{r.latency_ms}"
         )
+
+    # ── Derived outcome measures ──────────────────────────────────────
+    total_trials    = responses.count()
+    correct_trials  = responses.filter(is_correct=True).count()
+    digit_responses = responses.filter(trial_type="digit")
+    mixed_responses = responses.filter(trial_type="mixed")
+
+    correct_pct     = round(correct_trials / total_trials * 100) if total_trials else 0
+    avg_latency     = round(responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+    digit_correct   = digit_responses.filter(is_correct=True).count()
+    mixed_correct   = mixed_responses.filter(is_correct=True).count()
+    digit_pct       = round(digit_correct / digit_responses.count() * 100) if digit_responses.count() else 0
+    mixed_pct       = round(mixed_correct / mixed_responses.count() * 100) if mixed_responses.count() else 0
+    avg_digit_lat   = round(digit_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+    avg_mixed_lat   = round(mixed_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+
+    # Age bracket population comparison
+    bracket_sessions   = TestSession.objects.filter(is_completed=True, age_bracket=session.age_bracket)
+    bracket_responses  = TrialResponse.objects.filter(session__in=bracket_sessions)
+    bracket_correct    = bracket_responses.filter(is_correct=True).count()
+    bracket_total      = bracket_responses.count()
+    bracket_avg_pct    = round(bracket_correct / bracket_total * 100) if bracket_total else 0
+    bracket_avg_lat    = round(bracket_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+
+    lines += [
+        f"#",
+        f"# ── Derived Outcome Measures ──────────────────",
+        f"# Overall correct %:,{correct_pct}%",
+        f"# Overall avg latency:,{avg_latency} ms",
+        f"# Digit trials correct %:,{digit_pct}%",
+        f"# Mixed trials correct %:,{mixed_pct}%",
+        f"# Digit avg latency:,{avg_digit_lat} ms",
+        f"# Mixed avg latency:,{avg_mixed_lat} ms",
+        f"#",
+        f"# ── Age Bracket Comparison ({session.age_bracket}) ──────────",
+        f"# Bracket avg correct %:,{bracket_avg_pct}%",
+        f"# Bracket avg latency:,{bracket_avg_lat} ms",
+        f"# Bracket sample size:,{bracket_sessions.count()} tests",
+    ]
 
     content  = "\n".join(lines) + "\n"
     response = HttpResponse(content, content_type="text/csv")
