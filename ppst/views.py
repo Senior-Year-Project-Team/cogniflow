@@ -108,7 +108,11 @@ def _dob_to_age_bracket(dob_str):
     """
     from datetime import date
     try:
-        month, day, year = dob_str.split("/")
+        # Handle both MM/DD/YYYY and YYYY-MM-DD formats
+        if '-' in dob_str:
+            year, month, day = dob_str.split("-")
+        else:
+            month, day, year = dob_str.split("/")
         dob = date(int(year), int(month), int(day))
     except (ValueError, AttributeError):
         return ""
