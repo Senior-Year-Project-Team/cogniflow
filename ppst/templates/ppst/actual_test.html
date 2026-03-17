@@ -122,6 +122,11 @@
             color: #ffffff;
         }
 
+        .response-button.selected {
+            background: #003d7a;
+            color: white;
+        }
+
         .response-button:disabled {
             opacity: 1;
             cursor: not-allowed;
@@ -217,6 +222,71 @@
                 font-size: 2.5rem;
             }
         }
+
+        .practice-label {
+            display: inline-block;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 3px;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        .feedback-correct {
+            color: #1e6823;
+            background: #e6f4ea;
+            border: 1px solid #a8d5b5;
+            border-radius: 3px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .feedback-incorrect {
+            color: #842029;
+            background: #ffe4e6;
+            border: 1px solid #f5c6cb;
+            border-radius: 3px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .feedback-correct.active,
+        .feedback-incorrect.active {
+            display: block;
+        }
+
+        .transition-screen {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .transition-screen.active {
+            display: block;
+        }
+
+        .transition-screen h2 {
+            color: #003d7a;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .transition-screen p {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -242,8 +312,17 @@
 
             <div class="response-grid" id="response-grid"></div>
 
+            <div class="feedback-correct" id="feedback-correct"></div>
+            <div class="feedback-incorrect" id="feedback-incorrect"></div>
+
             <button class="action-button" id="submit-btn">Submit Response</button>
             <button class="action-button" id="next-btn">Next Trial</button>
+        </div>
+
+        <div class="transition-screen" id="transition-screen">
+            <h2 id="transition-title">Practice Complete</h2>
+            <p id="transition-message">You have completed the practice trials. The actual test will now begin. Your responses will be recorded.</p>
+            <button class="action-button active" id="transition-btn">Begin Test</button>
         </div>
 
         <div class="completion-screen" id="completion-screen">
@@ -255,32 +334,49 @@
     </div>
 
     <script>
-        const language = "{{ language|default:'en'|escapejs }}";
-        const selectedVoice = "{{ voice|default:'male'|escapejs }}";
+        const language = "{{ language|default:'en' }}";
+
+        // Practice trials — shown before scored trials, not saved to DB
+        const practiceDigitTrials = [
+            { sequence: ['4', '2'],         type: 'digit', practice: true },
+            { sequence: ['7', '1', '5'],     type: 'digit', practice: true },
+        ];
+
+        const practiceMixedTrials = [
+            { sequence: ['3', 'A'],          type: 'mixed', practice: true },
+            { sequence: ['B', '6', 'M'],     type: 'mixed', practice: true },
+        ];
 
         const testTrials = [
-            { sequence: ['3', '9', '1', '7'], type: 'digit' },
-            { sequence: ['6', '2', '8', '4'], type: 'digit' },
-            { sequence: ['5', '1', '9', '3'], type: 'digit' },
+            { sequence: ['3', '9', '1', '7'],      type: 'digit' },
+            { sequence: ['6', '2', '8', '4'],      type: 'digit' },
+            { sequence: ['5', '1', '9', '3'],      type: 'digit' },
             { sequence: ['7', '2', '5', '9', '1'], type: 'digit' },
             { sequence: ['4', '8', '1', '6', '3'], type: 'digit' },
             { sequence: ['9', '3', '6', '2', '8'], type: 'digit' },
-            { sequence: ['5', 'R', '2', 'B'], type: 'mixed' },
-            { sequence: ['T', '7', 'D', '4'], type: 'mixed' },
-            { sequence: ['8', 'N', '1', 'K'], type: 'mixed' },
+            { sequence: ['5', 'R', '2', 'B'],      type: 'mixed' },
+            { sequence: ['T', '7', 'D', '4'],      type: 'mixed' },
+            { sequence: ['8', 'N', '1', 'K'],      type: 'mixed' },
             { sequence: ['T', '7', 'D', '4', 'N'], type: 'mixed' },
             { sequence: ['9', 'L', '3', 'F', '6'], type: 'mixed' },
-            { sequence: ['M', '2', 'S', '8', 'C'], type: 'mixed' }
+            { sequence: ['M', '2', 'S', '8', 'C'], type: 'mixed' },
         ];
 
         const digitSymbols = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
         const letterSymbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M', 'N', 'R', 'S', 'T'];
 
+        // Test state
         let currentTrialIndex = 0;
         let userResponse = [];
         let startTime = null;
         let testResults = [];
         let availableVoices = [];
+        let selectedVoice = '{{ voice|default:"male" }}';
+
+        // Practice state
+        // phases: 'practice-digit' | 'practice-mixed' | 'test'
+        let phase = 'practice-digit';
+        let practiceIndex = 0;
 
         const translations = {
             en: {
@@ -294,7 +390,15 @@
                 nextTrial: "Next Trial",
                 completionTitle: "Assessment Complete",
                 completionMessage: "Thank you for completing the Philadelphia Pointing Span Test.",
-                completionInfo: "Your responses have been recorded. You may now close this window."
+                completionInfo: "Your responses have been recorded. You may now close this window.",
+                practiceLabel: "PRACTICE",
+                feedbackCorrect: "Correct! Well done.",
+                feedbackIncorrect: "Not quite. The correct order was: ",
+                transitionTitleDigit: "Practice Complete",
+                transitionMsgDigit: "You have completed the digit practice trials. The actual digit test will now begin. Your responses will be recorded.",
+                transitionTitleMixed: "Practice Complete",
+                transitionMsgMixed: "You have completed the mixed practice trials. The actual mixed test will now begin. Your responses will be recorded.",
+                beginTest: "Begin Test"
             },
             es: {
                 trialCounter: "Prueba",
@@ -307,7 +411,15 @@
                 nextTrial: "Siguiente Prueba",
                 completionTitle: "Evaluación Completa",
                 completionMessage: "Gracias por completar la Prueba de Amplitud de Señalamiento de Filadelfia.",
-                completionInfo: "Sus respuestas han sido registradas. Ahora puede cerrar esta ventana."
+                completionInfo: "Sus respuestas han sido registradas. Ahora puede cerrar esta ventana.",
+                practiceLabel: "PRÁCTICA",
+                feedbackCorrect: "¡Correcto! Bien hecho.",
+                feedbackIncorrect: "No exactamente. El orden correcto era: ",
+                transitionTitleDigit: "Práctica Completa",
+                transitionMsgDigit: "Ha completado los ensayos de práctica de dígitos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
+                transitionTitleMixed: "Práctica Completa",
+                transitionMsgMixed: "Ha completado los ensayos de práctica mixtos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
+                beginTest: "Comenzar Prueba"
             }
         };
 
@@ -328,15 +440,21 @@
         }
 
         function pickBestVoice() {
-            if (!availableVoices || !availableVoices.length) return null;
+            if (!availableVoices.length) return null;
 
             const langPrefix = language === 'es' ? 'es' : 'en';
+
             let candidates = availableVoices.filter(v =>
                 v.lang && v.lang.toLowerCase().startsWith(langPrefix)
             );
 
-            if (!candidates.length) return null;
-            if (selectedVoice === 'none') return null;
+            if (!candidates.length) {
+                candidates = availableVoices;
+            }
+
+            if (selectedVoice === 'none') {
+                return null;
+            }
 
             if (selectedVoice === 'female') {
                 const femaleVoice = candidates.find(v =>
@@ -355,63 +473,22 @@
             return candidates[0] || null;
         }
 
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
         function speakText(text, rate = 0.85) {
-            return new Promise((resolve) => {
-                try {
-                    if (!('speechSynthesis' in window)) {
-                        resolve();
-                        return;
-                    }
+            if (!('speechSynthesis' in window)) return;
+            if (selectedVoice === 'none') return;
 
-                    if (selectedVoice === 'none') {
-                        resolve();
-                        return;
-                    }
+            window.speechSynthesis.cancel();
 
-                    window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
+            utterance.rate = rate;
 
-                    const utterance = new SpeechSynthesisUtterance(String(text));
-                    utterance.lang = language === 'es' ? 'es-ES' : 'en-US';
-                    utterance.rate = rate;
+            const chosenVoice = pickBestVoice();
+            if (chosenVoice) {
+                utterance.voice = chosenVoice;
+            }
 
-                    const chosenVoice = pickBestVoice();
-                    if (chosenVoice) {
-                        utterance.voice = chosenVoice;
-                    }
-
-                    let finished = false;
-
-                    utterance.onend = () => {
-                        if (!finished) {
-                            finished = true;
-                            resolve();
-                        }
-                    };
-
-                    utterance.onerror = () => {
-                        if (!finished) {
-                            finished = true;
-                            resolve();
-                        }
-                    };
-
-                    window.speechSynthesis.speak(utterance);
-
-                    setTimeout(() => {
-                        if (!finished) {
-                            finished = true;
-                            resolve();
-                        }
-                    }, 1200);
-                } catch (error) {
-                    console.error('Speech error:', error);
-                    resolve();
-                }
-            });
+            window.speechSynthesis.speak(utterance);
         }
 
         if ('speechSynthesis' in window) {
@@ -420,49 +497,162 @@
         }
 
         function initTest() {
+            document.getElementById('status-text').textContent =
+                language === 'es'
+                ? 'Primero completará 2 ensayos de práctica antes de comenzar.'
+                : 'You will first complete 2 practice trials before the test begins.';
             setTimeout(() => {
-                startTrial();
-            }, 1500);
+                if (phase === 'practice-digit' || phase === 'practice-mixed') {
+                    startPracticeTrial();
+                } else {
+                    startTrial();
+                }
+            }, 2500);
         }
 
-        async function startTrial() {
-            const trial = testTrials[currentTrialIndex];
+        // ── Practice trial functions ──────────────────────────────────────────
+
+        function getCurrentPracticeTrials() {
+            return phase === 'practice-digit' ? practiceDigitTrials : practiceMixedTrials;
+        }
+
+        function startPracticeTrial() {
+            const trials = getCurrentPracticeTrials();
+            const trial = trials[practiceIndex];
             userResponse = [];
 
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
 
-            const progress = ((currentTrialIndex + 1) / testTrials.length) * 100;
-            document.getElementById('progress').style.width = progress + '%';
-            document.getElementById('current-trial').textContent = currentTrialIndex + 1;
+            // Show practice label
+            document.getElementById('trial-counter').innerHTML =
+                '<span class="practice-label">' + t.practiceLabel + '</span> ' +
+                (practiceIndex + 1) + ' / ' + trials.length;
 
+            // Progress bar stays at 0 during practice
+            document.getElementById('progress').style.width = '0%';
+
+            hideFeedback();
             document.getElementById('status-text').textContent = t.watchAndListen;
             document.getElementById('stimulus').classList.remove('active');
             document.getElementById('response-grid').classList.remove('active');
             document.getElementById('user-response').textContent = '';
             hideAllButtons();
 
-            await delay(1000);
-            await showStimulus(trial.sequence);
+            setTimeout(() => {
+                showStimulusPractice(trial.sequence, trial.type);
+            }, 1000);
         }
 
-        async function showStimulus(sequence) {
+        function showStimulusPractice(sequence, type) {
+            let idx = 0;
             const stimulusEl = document.getElementById('stimulus');
+            stimulusEl.classList.remove('active');
 
-            for (const symbol of sequence) {
-                stimulusEl.textContent = symbol;
-                stimulusEl.classList.add('active');
+            function showNext() {
+                if (idx < sequence.length) {
+                    const symbol = sequence[idx];
+                    stimulusEl.textContent = symbol;
+                    stimulusEl.classList.add('active');
+                    speakText(symbol, 0.8);
+                    idx++;
+                    setTimeout(() => {
+                        stimulusEl.classList.remove('active');
+                        setTimeout(showNext, 300);
+                    }, 1000);
+                } else {
+                    stimulusEl.classList.remove('active');
+                    setTimeout(() => showResponseGrid(type), 600);
+                }
+            }
+            setTimeout(showNext, 500);
+        }
 
-                await speakText(symbol, 0.8);
-                await delay(250);
+        function hideFeedback() {
+            document.getElementById('feedback-correct').classList.remove('active');
+            document.getElementById('feedback-incorrect').classList.remove('active');
+        }
 
-                stimulusEl.classList.remove('active');
-                await delay(200);
+        function showTransitionScreen(type) {
+            document.getElementById('test-interface').style.display = 'none';
+            const ts = document.getElementById('transition-screen');
+            ts.classList.add('active');
+            if (type === 'digit') {
+                document.getElementById('transition-title').textContent = t.transitionTitleDigit;
+                document.getElementById('transition-message').textContent = t.transitionMsgDigit;
+            } else {
+                document.getElementById('transition-title').textContent = t.transitionTitleMixed;
+                document.getElementById('transition-message').textContent = t.transitionMsgMixed;
+            }
+            document.getElementById('transition-btn').textContent = t.beginTest;
+        }
+
+        document.getElementById('transition-btn').onclick = function () {
+            document.getElementById('transition-screen').classList.remove('active');
+            document.getElementById('test-interface').style.display = 'block';
+            // After digit practice, start scored digit trials
+            phase = 'test';
+            currentTrialIndex = 0;
+            startTrial();
+        };
+
+        // ── Scored trial functions ─────────────────────────────────────────
+
+        function startTrial() {
+            const trial = testTrials[currentTrialIndex];
+            userResponse = [];
+
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
             }
 
-            await delay(400);
-            showResponseGrid(testTrials[currentTrialIndex].type);
+            const progress = ((currentTrialIndex + 1) / testTrials.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+
+            // Update trial counter
+            document.getElementById('trial-counter').innerHTML =
+                t.trialCounter + ' <strong>' + (currentTrialIndex + 1) + '</strong> ' +
+                t.of + ' <strong>' + testTrials.length + '</strong>';
+
+            hideFeedback();
+            document.getElementById('status-text').textContent = t.watchAndListen;
+            document.getElementById('stimulus').classList.remove('active');
+            document.getElementById('response-grid').classList.remove('active');
+            document.getElementById('user-response').textContent = '';
+            hideAllButtons();
+
+            setTimeout(() => {
+                showStimulus(trial.sequence);
+            }, 1000);
+        }
+
+        function showStimulus(sequence) {
+            let currentIndex = 0;
+            const stimulusEl = document.getElementById('stimulus');
+
+            function showNextSymbol() {
+                if (currentIndex < sequence.length) {
+                    const symbol = sequence[currentIndex];
+
+                    stimulusEl.textContent = symbol;
+                    stimulusEl.classList.add('active');
+
+                    speakText(symbol, 0.8);
+
+                    currentIndex++;
+
+                    setTimeout(() => {
+                        stimulusEl.classList.remove('active');
+                        setTimeout(showNextSymbol, 200);
+                    }, 1000);
+                } else {
+                    setTimeout(() => {
+                        showResponseGrid(testTrials[currentTrialIndex].type);
+                    }, 500);
+                }
+
+            }
+
+            showNextSymbol();
         }
 
         function showResponseGrid(type) {
@@ -495,6 +685,7 @@
             if (button.disabled || button.classList.contains('flash')) return;
 
             userResponse.push(symbol);
+
             button.classList.add('flash');
 
             setTimeout(() => {
@@ -520,36 +711,87 @@
         document.getElementById('submit-btn').onclick = function () {
             if (userResponse.length === 0) return;
 
-            const responseTime = Date.now() - startTime;
-            const trial = testTrials[currentTrialIndex];
-            const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
-            const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
-
-            testResults.push({
-                trialNumber: currentTrialIndex + 1,
-                type: trial.type,
-                stimulus: trial.sequence,
-                response: userResponse,
-                correct: isCorrect,
-                responseTime: responseTime
-            });
-
             const buttons = document.querySelectorAll('.response-button');
             buttons.forEach(btn => btn.disabled = true);
-
             this.classList.remove('active');
 
-            if (currentTrialIndex < testTrials.length - 1) {
-                document.getElementById('next-btn').classList.add('active');
+            if (phase === 'practice-digit' || phase === 'practice-mixed') {
+                // ── Practice scoring — show feedback, do NOT save ──────────
+                const trials = getCurrentPracticeTrials();
+                const trial = trials[practiceIndex];
+                const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
+                const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
+
+                if (isCorrect) {
+                    document.getElementById('feedback-correct').textContent = t.feedbackCorrect;
+                    document.getElementById('feedback-correct').classList.add('active');
+                } else {
+                    document.getElementById('feedback-incorrect').textContent =
+                        t.feedbackIncorrect + correctAnswer.join(' - ');
+                    document.getElementById('feedback-incorrect').classList.add('active');
+                }
+
+                practiceIndex++;
+
+                if (practiceIndex < trials.length) {
+                    document.getElementById('next-btn').classList.add('active');
+                } else {
+                    // Practice section done — show transition screen
+                    setTimeout(() => {
+                        showTransitionScreen(phase === 'practice-digit' ? 'digit' : 'mixed');
+                    }, 1200);
+                }
+
             } else {
-                finishTest();
+                // ── Scored trial ───────────────────────────────────────────
+                const responseTime = Date.now() - startTime;
+                const trial = testTrials[currentTrialIndex];
+                const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
+                const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
+
+                testResults.push({
+                    trialNumber: currentTrialIndex + 1,
+                    type: trial.type,
+                    stimulus: trial.sequence,
+                    response: userResponse,
+                    correct: isCorrect,
+                    responseTime: responseTime
+                });
+
+                // After 6 digit trials, show mixed practice before mixed scored trials
+                if (currentTrialIndex === 5) {
+                    phase = 'practice-mixed';
+                    practiceIndex = 0;
+                    setTimeout(() => {
+                        document.getElementById('test-interface').style.display = 'none';
+                        const ts = document.getElementById('transition-screen');
+                        ts.classList.add('active');
+                        document.getElementById('transition-title').textContent = t.transitionTitleMixed;
+                        document.getElementById('transition-message').textContent = t.transitionMsgMixed;
+                        document.getElementById('transition-btn').textContent = t.beginTest;
+                        document.getElementById('transition-btn').onclick = function () {
+                            ts.classList.remove('active');
+                            document.getElementById('test-interface').style.display = 'block';
+                            startPracticeTrial();
+                        };
+                    }, 800);
+                } else if (currentTrialIndex < testTrials.length - 1) {
+                    document.getElementById('next-btn').classList.add('active');
+                } else {
+                    finishTest();
+                }
             }
         };
 
         document.getElementById('next-btn').onclick = function () {
-            currentTrialIndex++;
             this.classList.remove('active');
-            startTrial();
+            hideFeedback();
+            if (phase === 'practice-digit' || phase === 'practice-mixed') {
+                startPracticeTrial();
+            } else {
+                currentTrialIndex++;
+                startTrial();
+            }
         };
 
         function finishTest() {
@@ -588,6 +830,7 @@
         function hideAllButtons() {
             document.getElementById('submit-btn').classList.remove('active');
             document.getElementById('next-btn').classList.remove('active');
+            hideFeedback();
         }
 
         initTest();
