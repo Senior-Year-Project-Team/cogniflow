@@ -180,9 +180,12 @@ def patient_access(request, access_token):
     if request.method == "POST":
         request.session["test_session_id"] = session.pk
         request.session["language"]        = session.language
-        request.session["voice"]           = session.voice
+        
+        # Allow patient to override the voice set by clinician
+        voice_override = request.POST.get("voice_override", "").strip()
+        request.session["voice"] = voice_override if voice_override in ("male", "female", "none") else session.voice
         return redirect("test_instructions")
-
+    
     return render(request, "ppst/patient_access.html", {
         "language": session.language,
         "voice":    session.voice,

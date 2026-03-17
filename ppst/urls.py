@@ -39,5 +39,5 @@ urlpatterns = [
     path("test/actual/",                  views.test_actual,         name="test_actual"),
 
     # Result submission (called by JS fetch at end of test)
-    path("test/submit/",                  views.submit_results,      name="submit_results"),
+    path("test/submit/",    views.submit_results,      name="submit_results"),
 ]
