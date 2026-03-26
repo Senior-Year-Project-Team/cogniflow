@@ -1,5 +1,7 @@
+import csv
 import json
 from datetime import timedelta
+from io import StringIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -414,6 +416,89 @@ def export_session(request, access_token):
     session   = get_object_or_404(TestSession, access_token=access_token, clinician=clinician)
     responses = session.trial_responses.all()
 
+    total_trials    = responses.count()
+    correct_trials  = responses.filter(is_correct=True).count()
+    digit_responses = responses.filter(trial_type="digit")
+    mixed_responses = responses.filter(trial_type="mixed")
+
+    correct_pct     = round(correct_trials / total_trials * 100) if total_trials else 0
+    avg_latency     = round(responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+    digit_correct   = digit_responses.filter(is_correct=True).count()
+    mixed_correct   = mixed_responses.filter(is_correct=True).count()
+    digit_pct       = round(digit_correct / digit_responses.count() * 100) if digit_responses.count() else 0
+    mixed_pct       = round(mixed_correct / mixed_responses.count() * 100) if mixed_responses.count() else 0
+    avg_digit_lat   = round(digit_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+    avg_mixed_lat   = round(mixed_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+
+    bracket_sessions  = TestSession.objects.filter(is_completed=True, age_bracket=session.age_bracket)
+    bracket_responses = TrialResponse.objects.filter(session__in=bracket_sessions)
+    bracket_correct   = bracket_responses.filter(is_correct=True).count()
+    bracket_total     = bracket_responses.count()
+    bracket_avg_pct   = round(bracket_correct / bracket_total * 100) if bracket_total else 0
+    bracket_avg_lat   = round(bracket_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["CogniFlow PPST Session Report"])
+    writer.writerow([])
+
+    writer.writerow(["Session Information"])
+    writer.writerow(["Field", "Value"])
+    writer.writerow(["Patient ID", f"P-{session.pk:04d}"])
+    writer.writerow(["Age Bracket", session.age_bracket])
+    writer.writerow(["Language", session.get_language_display()])
+    writer.writerow([
+        "Test Date",
+        session.completed_at.strftime("%Y-%m-%d %H:%M") if session.completed_at else "N/A",
+    ])
+    writer.writerow(["Completed", "Yes" if session.is_completed else "No"])
+    writer.writerow([])
+
+    writer.writerow(["Trial Data"])
+    writer.writerow([
+        "Trial Number",
+        "Trial Type",
+        "Stimulus Sequence",
+        "Patient Response",
+        "Correct",
+        "Latency (ms)",
+    ])
+    for r in responses:
+        writer.writerow([
+            r.trial_number,
+            r.get_trial_type_display(),
+            r.stimulus_sequence,
+            r.patient_response,
+            "Yes" if r.is_correct else "No",
+            r.latency_ms,
+        ])
+    writer.writerow([])
+
+    writer.writerow(["Performance Summary"])
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Total Trials", total_trials])
+    writer.writerow(["Correct Trials", correct_trials])
+    writer.writerow(["Accuracy (%)", correct_pct])
+    writer.writerow(["Average Latency (ms)", avg_latency])
+    writer.writerow(["Digit Trial Accuracy (%)", digit_pct])
+    writer.writerow(["Digit Average Latency (ms)", avg_digit_lat])
+    writer.writerow(["Mixed Trial Accuracy (%)", mixed_pct])
+    writer.writerow(["Mixed Average Latency (ms)", avg_mixed_lat])
+    writer.writerow([])
+
+    writer.writerow([f"Age Bracket Comparison: {session.age_bracket}"])
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Completed Sessions in Bracket", bracket_sessions.count()])
+    writer.writerow(["Bracket Average Accuracy (%)", bracket_avg_pct])
+    writer.writerow(["Bracket Average Latency (ms)", bracket_avg_lat])
+
+    response = HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = (
+        f'attachment; filename="ppst_session_{session.pk}.csv"'
+    )
+    return response
+
     # ── Session info header ───────────────────────────────────────────
     lines = [
         f"# CogniFlow PPST — Session Report",
@@ -483,6 +568,56 @@ def export_session(request, access_token):
 
 def export_test_example(request):
     """Return a small hardcoded CSV as a demo export."""
+    output = StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow(["CogniFlow PPST Example Export"])
+    writer.writerow([])
+
+    writer.writerow(["Session Information"])
+    writer.writerow(["Field", "Value"])
+    writer.writerow(["Patient ID", "P-0001"])
+    writer.writerow(["Age Bracket", "25-34"])
+    writer.writerow(["Language", "English"])
+    writer.writerow(["Test Date", "2026-03-26 14:30"])
+    writer.writerow(["Completed", "Yes"])
+    writer.writerow([])
+
+    writer.writerow(["Trial Data"])
+    writer.writerow([
+        "Trial Number",
+        "Trial Type",
+        "Stimulus Sequence",
+        "Patient Response",
+        "Correct",
+        "Latency (ms)",
+    ])
+    writer.writerow([1, "Digit Only", "2,9,5", "2,9,5", "Yes", 2134])
+    writer.writerow([2, "Digit Only", "7,3,1,8", "7,3,8,1", "No", 3891])
+    writer.writerow([])
+
+    writer.writerow(["Performance Summary"])
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Total Trials", 2])
+    writer.writerow(["Correct Trials", 1])
+    writer.writerow(["Accuracy (%)", 50])
+    writer.writerow(["Average Latency (ms)", 3013])
+    writer.writerow(["Digit Trial Accuracy (%)", 50])
+    writer.writerow(["Digit Average Latency (ms)", 3013])
+    writer.writerow(["Mixed Trial Accuracy (%)", 0])
+    writer.writerow(["Mixed Average Latency (ms)", 0])
+    writer.writerow([])
+
+    writer.writerow(["Age Bracket Comparison: 25-34"])
+    writer.writerow(["Metric", "Value"])
+    writer.writerow(["Completed Sessions in Bracket", 8])
+    writer.writerow(["Bracket Average Accuracy (%)", 67])
+    writer.writerow(["Bracket Average Latency (ms)", 2875])
+
+    response = HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="ppst_example_result.csv"'
+    return response
+
     content = (
         "trial_number,trial_type,stimulus,response,correct,latency_ms\n"
         '1,digit,"2,9,5","2,9,5",True,2134\n'
