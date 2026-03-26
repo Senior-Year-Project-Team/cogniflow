@@ -236,35 +236,6 @@
             letter-spacing: 0.05em;
         }
 
-        .feedback-correct {
-            color: #1e6823;
-            background: #e6f4ea;
-            border: 1px solid #a8d5b5;
-            border-radius: 3px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .feedback-incorrect {
-            color: #842029;
-            background: #ffe4e6;
-            border: 1px solid #f5c6cb;
-            border-radius: 3px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .feedback-correct.active,
-        .feedback-incorrect.active {
-            display: block;
-        }
-
         .transition-screen {
             display: none;
             padding: 40px 20px;
@@ -311,9 +282,6 @@
             <div class="user-response" id="user-response"></div>
 
             <div class="response-grid" id="response-grid"></div>
-
-            <div class="feedback-correct" id="feedback-correct"></div>
-            <div class="feedback-incorrect" id="feedback-incorrect"></div>
 
             <button class="action-button" id="submit-btn">Submit Response</button>
             <button class="action-button" id="next-btn">Next Trial</button>
@@ -392,8 +360,6 @@
                 completionMessage: "Thank you for completing the Philadelphia Pointing Span Test.",
                 completionInfo: "Your responses have been recorded. You may now close this window.",
                 practiceLabel: "PRACTICE",
-                feedbackCorrect: "Correct! Well done.",
-                feedbackIncorrect: "Not quite. The correct order was: ",
                 transitionTitleDigit: "Practice Complete",
                 transitionMsgDigit: "You have completed the digit practice trials. The actual digit test will now begin. Your responses will be recorded.",
                 transitionTitleMixed: "Practice Complete",
@@ -415,8 +381,6 @@
                 completionMessage: "Gracias por completar la Prueba de Amplitud de Señalamiento de Filadelfia.",
                 completionInfo: "Sus respuestas han sido registradas. Ahora puede cerrar esta ventana.",
                 practiceLabel: "PRÁCTICA",
-                feedbackCorrect: "¡Correcto! Bien hecho.",
-                feedbackIncorrect: "No exactamente. El orden correcto era: ",
                 transitionTitleDigit: "Práctica Completa",
                 transitionMsgDigit: "Ha completado los ensayos de práctica de dígitos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
                 transitionTitleMixedPractice: "Práctica de Pruebas Mixtas",
@@ -535,7 +499,6 @@
             // Progress bar stays at 0 during practice
             document.getElementById('progress').style.width = '0%';
 
-            hideFeedback();
             document.getElementById('status-text').textContent = t.watchAndListen;
             document.getElementById('stimulus').classList.remove('active');
             document.getElementById('response-grid').classList.remove('active');
@@ -569,11 +532,6 @@
                 }
             }
             setTimeout(showNext, 500);
-        }
-
-        function hideFeedback() {
-            document.getElementById('feedback-correct').classList.remove('active');
-            document.getElementById('feedback-incorrect').classList.remove('active');
         }
 
         function showTransitionScreen(type) {
@@ -633,7 +591,6 @@
                 t.trialCounter + ' <strong>' + (currentTrialIndex + 1) + '</strong> ' +
                 t.of + ' <strong>' + testTrials.length + '</strong>';
 
-            hideFeedback();
             document.getElementById('status-text').textContent = t.watchAndListen;
             document.getElementById('stimulus').classList.remove('active');
             document.getElementById('response-grid').classList.remove('active');
@@ -739,18 +696,6 @@
                 // ── Practice scoring — show feedback, do NOT save ──────────
                 const trials = getCurrentPracticeTrials();
                 const trial = trials[practiceIndex];
-                const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
-                const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
-
-                if (isCorrect) {
-                    document.getElementById('feedback-correct').textContent = t.feedbackCorrect;
-                    document.getElementById('feedback-correct').classList.add('active');
-                } else {
-                    document.getElementById('feedback-incorrect').textContent =
-                        t.feedbackIncorrect + correctAnswer.join(' - ');
-                    document.getElementById('feedback-incorrect').classList.add('active');
-                }
-
                 practiceIndex++;
 
                 if (practiceIndex < trials.length) {
@@ -795,7 +740,6 @@
 
         document.getElementById('next-btn').onclick = function () {
             this.classList.remove('active');
-            hideFeedback();
             if (phase === 'practice-digit' || phase === 'practice-mixed') {
                 startPracticeTrial();
             } else {
@@ -840,7 +784,6 @@
         function hideAllButtons() {
             document.getElementById('submit-btn').classList.remove('active');
             document.getElementById('next-btn').classList.remove('active');
-            hideFeedback();
         }
 
         initTest();

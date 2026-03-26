@@ -29,6 +29,8 @@ urlpatterns = [
     path("clinician/dashboard/",          views.clinician_dashboard, name="clinician_dashboard"),
     path("clinician/generate-session/",   views.generate_session,    name="generate_session"),
     path("clinician/export/example/",     views.export_test_example, name="export_test_example"),
+    path("clinician/report/<uuid:access_token>/preview/",
+                                          views.preview_session_report, name="preview_session_report"),
     path("clinician/export/<uuid:access_token>/",
                                           views.export_session,      name="export_session"),
 

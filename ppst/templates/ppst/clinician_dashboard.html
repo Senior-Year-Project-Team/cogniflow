@@ -358,7 +358,7 @@
                                 <th>Age Bracket</th>
                                 <th>Avg Latency (ms)</th>
                                 <th>Correct %</th>
-                                <th>Download</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -369,6 +369,7 @@
                                 <td>{{ row.avg_latency_ms }}</td>
                                 <td>{{ row.correct_percent }}%</td>
                                 <td>
+                                    <a class="btn btn-secondary" href="{{ row.preview_url|default:'#' }}">Preview</a>
                                     <a class="btn btn-secondary" href="{{ row.export_url|default:'#' }}">Download</a>
                                 </td>
                             </tr>
