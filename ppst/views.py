@@ -220,17 +220,10 @@ def _compute_correct_response(stimulus: list, trial_type: str) -> list:
     """
     Returns the expected PPST correct response for a given stimulus.
 
-    Digit trials:  sort all symbols numerically ascending.
-        e.g. ['9', '2', '5']  ->  ['2', '5', '9']
-
-    Mixed trials:  digits ascending first, then letters alphabetically.
-        e.g. ['T', '7', 'D', '4', 'N']  ->  ['4', '7', 'D', 'N', 'T']
+    Correct responses must match the sequence exactly as presented.
+        e.g. ['9', '2', '5']  ->  ['9', '2', '5']
     """
-    if trial_type == "digit":
-        return sorted(stimulus, key=lambda s: int(s))
-    digits  = sorted([s for s in stimulus if s.isdigit()], key=lambda s: int(s))
-    letters = sorted([s for s in stimulus if s.isalpha()])
-    return digits + letters
+    return list(stimulus)
 
 
 # ---------------------------------------------------------------------------
@@ -287,6 +280,12 @@ def submit_results(request):
         stimulus   = item["stimulus"]
         response   = item["response"]
         trial_type = item["type"]
+        latencies  = item.get("latencies", [])
+
+        if not isinstance(latencies, list):
+            latencies = []
+        if isinstance(response, list) and len(latencies) > len(response):
+            latencies = latencies[: len(response)]
 
         # Server-side PPST scoring (overrides any client-supplied 'correct' flag)
         correct_answer = _compute_correct_response(stimulus, trial_type)
@@ -299,6 +298,7 @@ def submit_results(request):
             stimulus_sequence = ",".join(stimulus),
             patient_response  = ",".join(response),
             latency_ms        = item["responseTime"],
+            latencies_ms      = ",".join(str(x) for x in latencies),
             is_correct        = is_correct,
         )
 
@@ -453,6 +453,7 @@ def _build_session_report(session):
                 "patient_response": r.patient_response,
                 "correct": "Yes" if r.is_correct else "No",
                 "latency_ms": r.latency_ms,
+                "latencies_ms": r.latencies_ms,
             }
             for r in responses
         ],
@@ -515,6 +516,7 @@ def export_session(request, access_token):
         "Patient Response",
         "Correct",
         "Latency (ms)",
+        "Latencies (ms)",
     ])
     for row in report["trial_rows"]:
         writer.writerow([
@@ -524,6 +526,7 @@ def export_session(request, access_token):
             row["patient_response"],
             row["correct"],
             row["latency_ms"],
+            row["latencies_ms"],
         ])
     writer.writerow([])
 
@@ -555,13 +558,13 @@ def export_session(request, access_token):
     ]
 
     # ── Raw trial data ────────────────────────────────────────────────
-    lines.append("trial_number,trial_type,stimulus,response,correct,latency_ms")
+    lines.append("trial_number,trial_type,stimulus,response,correct,latency_ms,latencies_ms")
     for r in responses:
         lines.append(
             f"{r.trial_number},{r.trial_type},"
             f"\"{r.stimulus_sequence}\","
             f"\"{r.patient_response}\","
-            f"{r.is_correct},{r.latency_ms}"
+            f"{r.is_correct},{r.latency_ms},\"{r.latencies_ms}\""
         )
 
     # ── Derived outcome measures ──────────────────────────────────────
@@ -636,9 +639,10 @@ def export_test_example(request):
         "Patient Response",
         "Correct",
         "Latency (ms)",
+        "Latencies (ms)",
     ])
-    writer.writerow([1, "Digit Only", "2,9,5", "2,9,5", "Yes", 2134])
-    writer.writerow([2, "Digit Only", "7,3,1,8", "7,3,8,1", "No", 3891])
+    writer.writerow([1, "Digit Only", "2,9,5", "2,9,5", "Yes", 2134, "820,640,674"])
+    writer.writerow([2, "Digit Only", "7,3,1,8", "7,3,8,1", "No", 3891, "1040,980,890,981"])
     writer.writerow([])
 
     writer.writerow(["Performance Summary"])
@@ -664,9 +668,9 @@ def export_test_example(request):
     return response
 
     content = (
-        "trial_number,trial_type,stimulus,response,correct,latency_ms\n"
-        '1,digit,"2,9,5","2,9,5",True,2134\n'
-        '2,digit,"7,3,1,8","7,3,8,1",False,3891\n'
+        "trial_number,trial_type,stimulus,response,correct,latency_ms,latencies_ms\n"
+        '1,digit,"2,9,5","2,9,5",True,2134,"820,640,674"\n'
+        '2,digit,"7,3,1,8","7,3,8,1",False,3891,"1040,980,890,981"\n'
     )
     response = HttpResponse(content, content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="ppst_example_result.csv"'

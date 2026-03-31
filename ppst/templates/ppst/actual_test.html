@@ -161,6 +161,11 @@
             display: inline-block;
         }
 
+        .action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .action-button:hover {
             background: #002d5a;
         }
@@ -336,7 +341,10 @@
         // Test state
         let currentTrialIndex = 0;
         let userResponse = [];
+        let responseLatencies = [];
         let startTime = null;
+        let lastClickTime = null;
+        let expectedResponseLength = 0;
         let testResults = [];
         let availableVoices = [];
         let selectedVoice = '{{ voice|default:"male" }}';
@@ -488,6 +496,10 @@
             const trials = getCurrentPracticeTrials();
             const trial = trials[practiceIndex];
             userResponse = [];
+            responseLatencies = [];
+            startTime = null;
+            lastClickTime = null;
+            expectedResponseLength = trial.sequence.length;
 
             if ('speechSynthesis' in window) speechSynthesis.cancel();
 
@@ -578,6 +590,10 @@
         function startTrial() {
             const trial = testTrials[currentTrialIndex];
             userResponse = [];
+            responseLatencies = [];
+            startTime = null;
+            lastClickTime = null;
+            expectedResponseLength = trial.sequence.length;
 
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
@@ -654,14 +670,25 @@
             });
 
             grid.classList.add('active');
-            document.getElementById('submit-btn').classList.add('active');
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.classList.add('active');
+            submitBtn.disabled = true;
             startTime = Date.now();
+            lastClickTime = startTime;
+            responseLatencies = [];
         }
 
         function selectSymbol(symbol, button) {
+            if (expectedResponseLength && userResponse.length >= expectedResponseLength) return;
             if (button.disabled || button.classList.contains('flash')) return;
 
             userResponse.push(symbol);
+            const now = Date.now();
+            if (lastClickTime === null) {
+                lastClickTime = startTime || now;
+            }
+            responseLatencies.push(now - lastClickTime);
+            lastClickTime = now;
 
             button.classList.add('flash');
 
@@ -674,15 +701,16 @@
 
             document.getElementById('user-response').innerHTML =
                 `<strong>${t.yourResponse}</strong> ${userResponse.join(' - ')}`;
+
+            if (expectedResponseLength && userResponse.length >= expectedResponseLength) {
+                const buttons = document.querySelectorAll('.response-button');
+                buttons.forEach(btn => btn.disabled = true);
+                document.getElementById('submit-btn').disabled = false;
+            }
         }
 
         function computeCorrectResponse(sequence, type) {
-            if (type === 'digit') {
-                return [...sequence].sort((a, b) => parseInt(a) - parseInt(b));
-            }
-            const digits = sequence.filter(s => /^\d$/.test(s)).sort((a, b) => parseInt(a) - parseInt(b));
-            const letters = sequence.filter(s => /^[A-Za-z]$/.test(s)).sort();
-            return [...digits, ...letters];
+            return [...sequence];
         }
 
         document.getElementById('submit-btn').onclick = function () {
@@ -719,6 +747,7 @@
                     type: trial.type,
                     stimulus: trial.sequence,
                     response: userResponse,
+                    latencies: responseLatencies.slice(),
                     correct: isCorrect,
                     responseTime: responseTime
                 });

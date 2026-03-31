@@ -91,6 +91,7 @@ class TrialResponse(models.Model):
     patient_response   = models.CharField(max_length=50)   # what the patient clicked
 
     latency_ms = models.PositiveIntegerField()             # milliseconds from grid display to submit
+    latencies_ms = models.CharField(max_length=200, blank=True, default="")  # per-click latencies, comma-separated
     is_correct = models.BooleanField()
 
     class Meta:
