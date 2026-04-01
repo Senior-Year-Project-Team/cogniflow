@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Avg
+from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from .models import TestSession, TrialResponse, Clinician
 
@@ -322,6 +323,7 @@ def clinician_dashboard(request):
     """Dashboard for clinicians to view results and administer new tests."""
 
     clinician = getattr(request.user, "clinician", None)
+    results_page_number = request.GET.get("results_page", 1)
 
     # Sessions belonging to this clinician
     all_sessions       = TestSession.objects.filter(clinician=clinician)
@@ -337,9 +339,13 @@ def clinician_dashboard(request):
         session__in=completed_sessions
     ).aggregate(mean_latency=Avg("latency_ms"))
 
+    # Paginate completed results so older tests remain accessible from the dashboard.
+    results_paginator = Paginator(completed_sessions.order_by("-completed_at"), 20)
+    results_page = results_paginator.get_page(results_page_number)
+
     # Build per-session result rows
     recent_results = []
-    for s in completed_sessions.order_by("-completed_at")[:20]:
+    for s in results_page.object_list:
         responses   = s.trial_responses.all()
         correct     = responses.filter(is_correct=True).count()
         avg_latency = responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0
@@ -401,6 +407,7 @@ def clinician_dashboard(request):
         "mean_latency_ms":      round(stats["mean_latency"] or 0),
         "age_bracket_count":    completed_sessions.values("age_bracket").distinct().count(),
         "recent_results":       recent_results,
+        "results_page":         results_page,
         "pending_rows":         pending_rows,
         "bracket_stats":        bracket_stats,
         "generate_url":         request.build_absolute_uri(reverse("generate_session")),
