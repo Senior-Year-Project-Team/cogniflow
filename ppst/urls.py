@@ -35,7 +35,6 @@ urlpatterns = [
                                           views.export_session,      name="export_session"),
 
     # Patient flow — UUID in URL ties the patient to the pre-created session
-    path("patient-entry/",                views.patient_link_entry,  name="patient_link_entry"),
     path("patient/<uuid:access_token>/",  views.patient_access,      name="patient_access"),
     path("test/instructions/",            views.test_instructions,   name="test_instructions"),
     path("test/actual/",                  views.test_actual,         name="test_actual"),
