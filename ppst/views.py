@@ -197,6 +197,8 @@ def patient_access(request, access_token):
 
 def test_instructions(request):
     """Instructions page shown before the assessment begins."""
+    if not request.session.get("test_session_id"):
+        return render(request, "ppst/session_expired.html", status=400)
     return render(request, "ppst/instructions.html", {
         "language": request.session.get("language", "en"),
         "voice":    request.session.get("voice", "male"),
@@ -205,6 +207,8 @@ def test_instructions(request):
 
 def test_actual(request):
     """The live PPST assessment page."""
+    if not request.session.get("test_session_id"):
+        return render(request, "ppst/session_expired.html", status=400)
     context = {
         "language": request.session.get("language", "en"),
         "voice":    request.session.get("voice", "male"),
@@ -547,72 +551,6 @@ def export_session(request, access_token):
     )
     return response
 
-    # ── Session info header ───────────────────────────────────────────
-    lines = [
-        f"# CogniFlow PPST — Session Report",
-        f"# Patient ID:,P-{session.pk:04d}",
-        f"# Age Bracket:,{session.age_bracket}",
-        f"# Language:,{session.get_language_display()}",
-        f"# Test Date:,{session.completed_at.strftime('%Y-%m-%d %H:%M') if session.completed_at else 'N/A'}",
-        f"#",
-    ]
-
-    # ── Raw trial data ────────────────────────────────────────────────
-    lines.append("trial_number,trial_type,stimulus,response,correct,latency_ms,latencies_ms")
-    for r in responses:
-        lines.append(
-            f"{r.trial_number},{r.trial_type},"
-            f"\"{r.stimulus_sequence}\","
-            f"\"{r.patient_response}\","
-            f"{r.is_correct},{r.latency_ms},\"{r.latencies_ms}\""
-        )
-
-    # ── Derived outcome measures ──────────────────────────────────────
-    total_trials    = responses.count()
-    correct_trials  = responses.filter(is_correct=True).count()
-    digit_responses = responses.filter(trial_type="digit")
-    mixed_responses = responses.filter(trial_type="mixed")
-
-    correct_pct     = round(correct_trials / total_trials * 100) if total_trials else 0
-    avg_latency     = round(responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
-    digit_correct   = digit_responses.filter(is_correct=True).count()
-    mixed_correct   = mixed_responses.filter(is_correct=True).count()
-    digit_pct       = round(digit_correct / digit_responses.count() * 100) if digit_responses.count() else 0
-    mixed_pct       = round(mixed_correct / mixed_responses.count() * 100) if mixed_responses.count() else 0
-    avg_digit_lat   = round(digit_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
-    avg_mixed_lat   = round(mixed_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
-
-    # Age bracket population comparison
-    bracket_sessions   = TestSession.objects.filter(is_completed=True, age_bracket=session.age_bracket)
-    bracket_responses  = TrialResponse.objects.filter(session__in=bracket_sessions)
-    bracket_correct    = bracket_responses.filter(is_correct=True).count()
-    bracket_total      = bracket_responses.count()
-    bracket_avg_pct    = round(bracket_correct / bracket_total * 100) if bracket_total else 0
-    bracket_avg_lat    = round(bracket_responses.aggregate(avg=Avg("latency_ms"))["avg"] or 0)
-
-    lines += [
-        f"#",
-        f"# ── Derived Outcome Measures ──────────────────",
-        f"# Overall correct %:,{correct_pct}%",
-        f"# Overall avg latency:,{avg_latency} ms",
-        f"# Digit trials correct %:,{digit_pct}%",
-        f"# Mixed trials correct %:,{mixed_pct}%",
-        f"# Digit avg latency:,{avg_digit_lat} ms",
-        f"# Mixed avg latency:,{avg_mixed_lat} ms",
-        f"#",
-        f"# ── Age Bracket Comparison ({session.age_bracket}) ──────────",
-        f"# Bracket avg correct %:,{bracket_avg_pct}%",
-        f"# Bracket avg latency:,{bracket_avg_lat} ms",
-        f"# Bracket sample size:,{bracket_sessions.count()} tests",
-    ]
-
-    content  = "\n".join(lines) + "\n"
-    response = HttpResponse(content, content_type="text/csv")
-    response["Content-Disposition"] = (
-        f'attachment; filename="ppst_session_{session.pk}.csv"'
-    )
-    return response
-
 
 def export_test_example(request):
     """Return a small hardcoded CSV as a demo export."""
@@ -664,14 +602,5 @@ def export_test_example(request):
     writer.writerow(["Bracket Average Latency (ms)", 2875])
 
     response = HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
-    response["Content-Disposition"] = 'attachment; filename="ppst_example_result.csv"'
-    return response
-
-    content = (
-        "trial_number,trial_type,stimulus,response,correct,latency_ms,latencies_ms\n"
-        '1,digit,"2,9,5","2,9,5",True,2134,"820,640,674"\n'
-        '2,digit,"7,3,1,8","7,3,8,1",False,3891,"1040,980,890,981"\n'
-    )
-    response = HttpResponse(content, content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="ppst_example_result.csv"'
     return response
