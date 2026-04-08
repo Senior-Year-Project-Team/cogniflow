@@ -24,11 +24,6 @@ def index(request):
     return render(request, "ppst/index.html")
 
 
-def patient_link_entry(request):
-    """Page where a patient pastes the link provided by their clinician."""
-    return render(request, "ppst/patient_link_entry.html")
-
-
 # ---------------------------------------------------------------------------
 # Clinician auth
 # ---------------------------------------------------------------------------
