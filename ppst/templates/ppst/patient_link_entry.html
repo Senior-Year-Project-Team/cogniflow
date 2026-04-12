@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CogniFlow - Enter Your Link</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -112,8 +117,13 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        .submit-button:hover { background: #002d5a; }
-        .submit-button:active { background: #001d3a; }
+        .submit-button:hover {
+            background: #002d5a;
+        }
+
+        .submit-button:active {
+            background: #001d3a;
+        }
 
         .privacy-note {
             margin-top: 30px;
@@ -136,11 +146,18 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 30px 20px; margin: 20px auto; }
-            .logo h1 { font-size: 1.5rem; }
+            .container {
+                padding: 30px 20px;
+                margin: 20px auto;
+            }
+
+            .logo h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="logo">
@@ -150,22 +167,17 @@
 
         <div class="welcome-text">
             <h2>Enter Your Assessment Link</h2>
-            <p>Your clinician has provided you with a unique access link. Please paste it below to begin your session.</p>
+            <p>Your clinician has provided you with a unique access link. Please paste it below to begin your session.
+            </p>
         </div>
 
-        <form id="link-form" action="{% url 'patient_access' %}" method="GET">
+        <form id="link-form">
             <div class="form-group">
                 <label for="patient-link">Access Link</label>
-                <input
-                    type="text"
-                    id="patient-link"
-                    name="token"
-                    placeholder="Paste your link or code here"
-                    autocomplete="off"
-                    autofocus
-                />
-                <p class="helper-text">The link looks like: http://127.0.0.1:8000/patient-access/?token=XXXX</p>
-                <p class="error-message" id="error-msg">Please enter a valid access link or code.</p>
+                <input type="text" id="patient-link" name="token" placeholder="Paste your link here" autocomplete="off"
+                    autofocus />
+                <p class="helper-text">Paste the full link your clinician sent you and press Continue.</p>
+                <p class="error-message" id="error-msg">Please paste a valid access link.</p>
             </div>
 
             <button type="submit" class="submit-button">Continue to Assessment</button>
@@ -173,7 +185,8 @@
 
         <div class="privacy-note">
             <p><strong>Privacy Notice</strong></p>
-            <p>This platform is designed for research use only. No personally identifiable information is collected during your session.</p>
+            <p>This platform is designed for research use only. No personally identifiable information is collected
+                during your session.</p>
         </div>
     </div>
 
@@ -182,32 +195,30 @@
         const input = document.getElementById('patient-link');
         const errorMsg = document.getElementById('error-msg');
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
             const val = input.value.trim();
 
             if (!val) {
-                e.preventDefault();
                 errorMsg.style.display = 'block';
                 return;
             }
 
-            // If they pasted a full URL, extract and navigate to it directly
+            // Must be a full URL containing a UUID patient link
             try {
                 const url = new URL(val);
-                e.preventDefault();
+                errorMsg.style.display = 'none';
                 window.location.href = url.href;
-                return;
             } catch (_) {
-                // Not a full URL — treat as a token and proceed with form GET
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Please paste the full link (starting with http://).';
             }
-
-            errorMsg.style.display = 'none';
         });
 
-        // Clear error on input
-        input.addEventListener('input', function() {
+        input.addEventListener('input', function () {
             errorMsg.style.display = 'none';
         });
     </script>
 </body>
+
 </html>
