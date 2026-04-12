@@ -202,6 +202,9 @@ def patient_access(request, access_token):
 
 def test_instructions(request):
     """Instructions page shown before the assessment begins."""
+    # Guard: must have arrived via the patient_access flow
+    if not request.session.get("test_session_id"):
+        return redirect("index")
     return render(request, "ppst/instructions.html", {
         "language": request.session.get("language", "en"),
         "voice":    request.session.get("voice", "male"),
@@ -210,6 +213,9 @@ def test_instructions(request):
 
 def test_actual(request):
     """The live PPST assessment page."""
+    # Guard: must have arrived via the patient_access flow
+    if not request.session.get("test_session_id"):
+        return redirect("index")
     context = {
         "language": request.session.get("language", "en"),
         "voice":    request.session.get("voice", "male"),
