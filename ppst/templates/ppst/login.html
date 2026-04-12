@@ -1,276 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CogniFlow - Login</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-        background: #f5f5f5;
-        min-height: 100vh;
-        padding: 20px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CogniFlow - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border: 1px solid #d1d1d1;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 40px;
+    }
+
+    .logo {
+      border-bottom: 2px solid #003d7a;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      color: #003d7a;
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .logo p {
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    .welcome-text {
+      margin-bottom: 24px;
+    }
+
+    .welcome-text h2 {
+      color: #333;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .welcome-text p {
+      color: #666;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 0.95rem;
+      background: white;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #003d7a;
+    }
+
+    input.invalid {
+      border-color: #c0392b;
+    }
+
+    .field-error {
+      color: #c0392b;
+      font-size: 0.8rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error.visible {
+      display: block;
+    }
+
+    .helper-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .helper-row a {
+      color: #003d7a;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 12px;
+      background: #003d7a;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .login-button:hover {
+      background: #002d5a;
+    }
+
+    .login-button:active {
+      background: #001d3a;
+    }
+
+    .privacy-note {
+      margin-top: 28px;
+      padding: 15px;
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-left: 4px solid #003d7a;
+    }
+
+    .privacy-note p {
+      color: #555;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .privacy-note strong {
+      color: #333;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 768px) {
       .container {
-        background: white;
-        border: 1px solid #d1d1d1;
-        max-width: 600px;
-        margin: 40px auto;
-        padding: 40px;
-      }
-
-      .logo {
-        border-bottom: 2px solid #003d7a;
-        padding-bottom: 20px;
-        margin-bottom: 30px;
+        padding: 30px 20px;
+        margin: 20px auto;
       }
 
       .logo h1 {
-        color: #003d7a;
-        font-size: 1.75rem;
-        font-weight: 600;
-        margin-bottom: 5px;
-      }
-
-      .logo p {
-        color: #555;
-        font-size: 0.9rem;
-      }
-
-      .welcome-text {
-        margin-bottom: 24px;
-      }
-
-      .welcome-text h2 {
-        color: #333;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-        font-weight: 600;
-      }
-
-      .welcome-text p {
-        color: #666;
-        font-size: 0.9rem;
-        line-height: 1.6;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      label {
-        display: block;
-        color: #333;
-        font-weight: 600;
-        margin-bottom: 6px;
-        font-size: 0.95rem;
-      }
-
-      input[type="email"],
-      input[type="password"] {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        font-size: 0.95rem;
-        background: white;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      input[type="email"]:focus,
-      input[type="password"]:focus {
-        outline: none;
-        border-color: #003d7a;
-      }
-
-      input.invalid {
-        border-color: #c0392b;
-      }
-
-      .field-error {
-        color: #c0392b;
-        font-size: 0.8rem;
-        margin-top: 5px;
-        display: none;
-      }
-
-      .field-error.visible {
-        display: block;
+        font-size: 1.5rem;
       }
 
       .helper-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        font-size: 0.85rem;
-        color: #666;
-        margin-bottom: 10px;
+        flex-direction: column;
+        align-items: flex-start;
       }
+    }
+  </style>
+</head>
 
-      .helper-row a {
-        color: #003d7a;
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      .login-button {
-        width: 100%;
-        padding: 12px;
-        background: #003d7a;
-        color: white;
-        border: none;
-        border-radius: 3px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 6px;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      .login-button:hover {
-        background: #002d5a;
-      }
-
-      .login-button:active {
-        background: #001d3a;
-      }
-
-      .privacy-note {
-        margin-top: 28px;
-        padding: 15px;
-        background: #f9f9f9;
-        border: 1px solid #e0e0e0;
-        border-left: 4px solid #003d7a;
-      }
-
-      .privacy-note p {
-        color: #555;
-        font-size: 0.85rem;
-        line-height: 1.5;
-      }
-
-      .privacy-note strong {
-        color: #333;
-        display: block;
-        margin-bottom: 5px;
-      }
-
-      @media (max-width: 768px) {
-        .container {
-          padding: 30px 20px;
-          margin: 20px auto;
-        }
-
-        .logo h1 {
-          font-size: 1.5rem;
-        }
-
-        .helper-row {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="logo">
-        <h1>CogniFlow</h1>
-        <p>Philadelphia Pointing Span Test</p>
-      </div>
-
-      <div class="welcome-text">
-        <h2>Sign in to continue</h2>
-        <p>Use your clinician or research account to access secure PPST sessions.</p>
-      </div>
-
-      <form action="/login/" method="post" id="login-form" novalidate>
-        {% csrf_token %}
-
-        {% if error %}
-        <div style="background:#fff0f0;border:1px solid #f5c6cb;border-left:4px solid #c0392b;color:#c0392b;font-size:0.88rem;padding:10px 14px;border-radius:3px;margin-bottom:16px;">
-          {{ error }}
-        </div>
-        {% endif %}
-
-        <div class="form-group">
-          <label for="email">Email address</label>
-          <input type="email" id="email" name="username" placeholder="you@clinic.org" required autocomplete="username" />
-          <span class="field-error" id="email-error">Please enter a valid email address.</span>
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="••••••••" required />
-          <span class="field-error" id="password-error">Password must be at least 6 characters.</span>
-        </div>
-
-        <div class="helper-row">
-          <label style="display: flex; gap: 8px; align-items: center">
-            <input type="checkbox" name="remember_me" id="remember_me"/>
-            Remember me
-          </label>
-          <a href="/password-reset/">Forgot password?</a>
-        </div>
-
-        <button type="submit" class="login-button">Sign in</button>
-
-        <div class="helper-row" style="margin-top: 10px">
-          <span>Don't have a clinician account?</span>
-          <a href="{% url 'clinician_register' %}">Create one</a>
-        </div>
-      </form>
-
-      <div class="privacy-note">
-        <p><strong>Security Notice</strong></p>
-        <p>Access is restricted to authorized staff. All sessions are logged and encrypted.</p>
-      </div>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>CogniFlow</h1>
+      <p>Philadelphia Pointing Span Test</p>
     </div>
 
-    <script>
-      const form  = document.getElementById('login-form');
-      const email = document.getElementById('email');
-      const pass  = document.getElementById('password');
+    <div class="welcome-text">
+      <h2>Sign in to continue</h2>
+      <p>Use your clinician or research account to access secure PPST sessions.</p>
+    </div>
 
-      function validateEmail(val) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+    <form action="/login/" method="post" id="login-form" novalidate>
+      {% csrf_token %}
+
+      {% if error %}
+      <div
+        style="background:#fff0f0;border:1px solid #f5c6cb;border-left:4px solid #c0392b;color:#c0392b;font-size:0.88rem;padding:10px 14px;border-radius:3px;margin-bottom:16px;">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="username" placeholder="you@clinic.org" required autocomplete="username" />
+        <span class="field-error" id="email-error">Please enter a valid email address.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required />
+        <span class="field-error" id="password-error">Password must be at least 8 characters.</span>
+      </div>
+
+      <div class="helper-row">
+        <label style="display: flex; gap: 8px; align-items: center">
+          <input type="checkbox" name="remember_me" id="remember_me" />
+          Remember me
+        </label>
+        <a href="/password-reset/">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="login-button">Sign in</button>
+
+      <div class="helper-row" style="margin-top: 10px">
+        <span>Don't have a clinician account?</span>
+        <a href="{% url 'clinician_register' %}">Create one</a>
+      </div>
+    </form>
+
+    <div class="privacy-note">
+      <p><strong>Security Notice</strong></p>
+      <p>Access is restricted to authorized staff. All sessions are logged and encrypted.</p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const email = document.getElementById('email');
+    const pass = document.getElementById('password');
+
+    function validateEmail(val) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+    }
+
+    function showError(input, errorId, show) {
+      const err = document.getElementById(errorId);
+      if (show) {
+        input.classList.add('invalid');
+        err.classList.add('visible');
+      } else {
+        input.classList.remove('invalid');
+        err.classList.remove('visible');
       }
+    }
 
-      function showError(input, errorId, show) {
-        const err = document.getElementById(errorId);
-        if (show) {
-          input.classList.add('invalid');
-          err.classList.add('visible');
-        } else {
-          input.classList.remove('invalid');
-          err.classList.remove('visible');
-        }
-      }
+    // Live validation as user types
+    email.addEventListener('input', function () {
+      if (this.value) showError(this, 'email-error', !validateEmail(this.value));
+    });
 
-      // Live validation as user types
-      email.addEventListener('input', function () {
-        if (this.value) showError(this, 'email-error', !validateEmail(this.value));
-      });
+    pass.addEventListener('input', function () {
+      if (this.value) showError(this, 'password-error', this.value.length < 8);
+    });
 
-      pass.addEventListener('input', function () {
-        if (this.value) showError(this, 'password-error', this.value.length < 6);
-      });
+    // Block submit if fields are invalid
+    form.addEventListener('submit', function (e) {
+      let valid = true;
+      if (!validateEmail(email.value)) { showError(email, 'email-error', true); valid = false; }
+      if (pass.value.length < 8) { showError(pass, 'password-error', true); valid = false; }
+      if (!valid) e.preventDefault();
+    });
+  </script>
+</body>
 
-      // Block submit if fields are invalid
-      form.addEventListener('submit', function (e) {
-        let valid = true;
-        if (!validateEmail(email.value)) { showError(email, 'email-error', true); valid = false; }
-        if (pass.value.length < 6)       { showError(pass, 'password-error', true); valid = false; }
-        if (!valid) e.preventDefault();
-      });
-    </script>
-  </body>
 </html>
