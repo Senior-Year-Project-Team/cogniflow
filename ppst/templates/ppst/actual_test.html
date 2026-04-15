@@ -765,10 +765,10 @@
                 // ── Practice scoring — show feedback, do NOT save ──────────
                 const trials = getCurrentPracticeTrials();
                 const trial = trials[practiceIndex];
+
                 // Show feedback
                 const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
                 const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
-
                 if (isCorrect) {
                     document.getElementById('feedback-correct').textContent = t.feedbackCorrect;
                     document.getElementById('feedback-correct').classList.add('active');

@@ -35,6 +35,8 @@ def patient_link_entry(request):
 
 def login(request):
     """Login page for clinicians."""
+    if request.user.is_authenticated:
+        return redirect("clinician_dashboard")
     if request.method == "POST":
         username = request.POST.get("username", "")
         password = request.POST.get("password", "")
