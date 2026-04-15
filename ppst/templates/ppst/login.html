@@ -206,7 +206,7 @@
 
       <div class="form-group">
         <label for="email">Email address</label>
-        <input type="email" id="email" name="username" placeholder="you@clinic.org" required autocomplete="username" />
+        <input type="email" id="email" name="username" placeholder="you@clinic.org" required autocomplete="username" value = "{{ request.POST.username }}" />
         <span class="field-error" id="email-error">Please enter a valid email address.</span>
       </div>
 

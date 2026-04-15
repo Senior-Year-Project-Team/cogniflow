@@ -170,6 +170,35 @@
             background: #002d5a;
         }
 
+        .feedback-correct {
+            color: #1e6823;
+            background: #e6f4ea;
+            border: 1px solid #a8d5b5;
+            border-radius: 3px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .feedback-incorrect {
+            color: #842029;
+            background: #ffe4e6;
+            border: 1px solid #f5c6cb;
+            border-radius: 3px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .feedback-correct.active,
+        .feedback-incorrect.active {
+            display: block;
+        }
+
         .completion-screen {
             display: none;
             padding: 40px 20px;
@@ -288,6 +317,9 @@
 
             <div class="response-grid" id="response-grid"></div>
 
+            <div class="feedback-correct" id="feedback-correct"></div>
+            <div class="feedback-incorrect" id="feedback-incorrect"></div>
+
             <button class="action-button" id="submit-btn">Submit Response</button>
             <button class="action-button" id="next-btn">Next Trial</button>
         </div>
@@ -374,7 +406,9 @@
                 transitionTitleMixedPractice: "Mixed Trials Practice",
                 transitionMsgMixedPractice: "You will now complete 2 practice trials with letters and numbers mixed together. These will not be recorded.",  
                 transitionMsgMixed: "You have completed the mixed practice trials. The actual mixed test will now begin. Your responses will be recorded.",
-                beginTest: "Begin Test"
+                beginTest: "Begin Test",
+                feedbackCorrect: "Correct! Well done.",
+                feedbackIncorrect: "Not quite. The correct order was: "
             },
             es: {
                 trialCounter: "Prueba",
@@ -395,7 +429,9 @@
                 transitionMsgMixedPractice: "Ahora completará 2 ensayos de práctica con letras y números mezclados. Estos no serán registrados.",
                 transitionTitleMixed: "Práctica Completa",
                 transitionMsgMixed: "Ha completado los ensayos de práctica mixtos. Ahora comenzará la prueba real. Sus respuestas serán registradas.",
-                beginTest: "Comenzar Prueba"
+                beginTest: "Comenzar Prueba",
+                feedbackCorrect: "¡Correcto! Bien hecho.",
+                feedbackIncorrect: "No exactamente. El orden correcto era: "
             }
         };
 
@@ -710,7 +746,12 @@
         }
 
         function computeCorrectResponse(sequence, type) {
-            return [...sequence];
+            if (type === 'digit') {
+                return [...sequence].sort((a, b) => parseInt(a) - parseInt(b));
+            }
+            const digits = sequence.filter(s => /^\d$/.test(s)).sort((a, b) => parseInt(a) - parseInt(b));
+            const letters = sequence.filter(s => /^[A-Za-z]$/.test(s)).sort();
+            return [...digits, ...letters];
         }
 
         document.getElementById('submit-btn').onclick = function () {
@@ -724,6 +765,19 @@
                 // ── Practice scoring — show feedback, do NOT save ──────────
                 const trials = getCurrentPracticeTrials();
                 const trial = trials[practiceIndex];
+
+                // Show feedback
+                const correctAnswer = computeCorrectResponse(trial.sequence, trial.type);
+                const isCorrect = JSON.stringify(userResponse) === JSON.stringify(correctAnswer);
+                if (isCorrect) {
+                    document.getElementById('feedback-correct').textContent = t.feedbackCorrect;
+                    document.getElementById('feedback-correct').classList.add('active');
+                } else {
+                    document.getElementById('feedback-incorrect').textContent =
+                        t.feedbackIncorrect + correctAnswer.join(' - ');
+                    document.getElementById('feedback-incorrect').classList.add('active');
+                }
+
                 practiceIndex++;
 
                 if (practiceIndex < trials.length) {
@@ -769,6 +823,7 @@
 
         document.getElementById('next-btn').onclick = function () {
             this.classList.remove('active');
+            hideFeedback();
             if (phase === 'practice-digit' || phase === 'practice-mixed') {
                 startPracticeTrial();
             } else {
@@ -810,9 +865,15 @@
             });
         }
 
+        function hideFeedback() {
+            document.getElementById('feedback-correct').classList.remove('active');
+            document.getElementById('feedback-incorrect').classList.remove('active');
+        }
+
         function hideAllButtons() {
             document.getElementById('submit-btn').classList.remove('active');
             document.getElementById('next-btn').classList.remove('active');
+            hideFeedback();
         }
 
         initTest();
