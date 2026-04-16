@@ -185,8 +185,8 @@
       <div class="hero">
         <h2>Welcome to the PPST platform</h2>
         <p>
-          Choose the path below to begin. Clinicians can manage assessments and
-          monitor sessions, while patients can access their test directly.
+          Sign in to manage assessments, generate patient session links, and review results.
+          Patients should use the unique link provided by their clinician to begin their assessment.
         </p>
       </div>
 
@@ -195,23 +195,6 @@
           <h3>Clinician Login</h3>
           <p>Access administrative tools, create test links, and review results.</p>
           <a class="button" href="/login/">Sign in</a>
-        </div>
-        <div class="card">
-          <h3>Patient Access</h3>
-          <p>Start a new assessment using the link provided by your clinician.</p>
-          <form class="link-form" id="patient-link-form">
-            <input
-              class="link-input"
-              id="patient-link"
-              type="url"
-              name="patient_link"
-              placeholder="Paste assessment link"
-              autocomplete="off"
-              required
-            />
-            <button class="button" type="submit">Open Link</button>
-            <div class="link-help">Paste the link your clinician sent and press Open Link.</div>
-          </form>
         </div>
       </div>
 
@@ -223,33 +206,7 @@
         </p>
       </div>
     </div>
-    <script>
-      (function () {
-        const form = document.getElementById("patient-link-form");
-        const input = document.getElementById("patient-link");
 
-        if (!form || !input) {
-          return;
-        }
-
-        form.addEventListener("submit", function (event) {
-          event.preventDefault();
-          const link = input.value.trim();
-
-          if (!link) {
-            input.focus();
-            return;
-          }
-
-          if (!input.checkValidity()) {
-            input.reportValidity();
-            return;
-          }
-
-          window.location.href = link;
-        });
-      })();
-    </script>
   </body>
 </html>
 
