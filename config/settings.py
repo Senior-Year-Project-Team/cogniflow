@@ -1,8 +1,16 @@
+import os
 from pathlib import Path
+
+# Load .env file if it exists (pip install python-dotenv)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+except ImportError:
+    pass  # dotenv not installed — set env vars manually
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "dev-only-secret-key-change-me"
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-secret-key-change-me")
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -63,11 +71,28 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Prints password reset emails to terminal instead of sending (dev only)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ---------------------------------------------------------------------------
+# Email — Gmail SMTP
+# Set GMAIL_USER and GMAIL_APP_PASSWORD in your .env file.
+# See: https://myaccount.google.com/apppasswords  (requires 2FA enabled)
+# ---------------------------------------------------------------------------
+EMAIL_BACKEND       = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST          = "smtp.gmail.com"
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = os.environ.get("GMAIL_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+DEFAULT_FROM_EMAIL  = f"CogniFlow <{os.environ.get('GMAIL_USER', 'noreply@cogniflow.app')}>"
 
-PASSWORD_RESET_TIMEOUT = 180  # 3 minutes (in seconds)
+# Fall back to console backend if credentials are not set yet (dev convenience)
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# ---------------------------------------------------------------------------
+# Password reset
+# ---------------------------------------------------------------------------
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour (in seconds)
 
 # Session settings — Remember Me
-SESSION_COOKIE_AGE = 1209600          # 2 weeks in seconds
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True 
+SESSION_COOKIE_AGE = 1209600           # 2 weeks in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
