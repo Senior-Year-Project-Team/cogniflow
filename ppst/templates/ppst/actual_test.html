@@ -74,6 +74,12 @@
             justify-content: center;
         }
 
+        .stimulus-display.hidden {
+            visibility: hidden;
+            border-color: transparent;
+            background: transparent;
+        }
+
         .stimulus-sequence {
             font-size: 4rem;
             font-weight: 600;
@@ -309,7 +315,7 @@
                 <span id="status-text">Get ready...</span>
             </div>
 
-            <div class="stimulus-display">
+            <div class="stimulus-display" id="stimulus-box">
                 <div class="stimulus-sequence" id="stimulus"></div>
             </div>
 
@@ -576,6 +582,7 @@
                     }, 1000);
                 } else {
                     stimulusEl.classList.remove('active');
+                    document.getElementById('stimulus-box').classList.add('hidden');
                     setTimeout(() => showResponseGrid(type), 600);
                 }
             }
@@ -674,6 +681,7 @@
                         setTimeout(showNextSymbol, 200);
                     }, 1000);
                 } else {
+                    document.getElementById('stimulus-box').classList.add('hidden');
                     setTimeout(() => {
                         showResponseGrid(testTrials[currentTrialIndex].type);
                     }, 500);
