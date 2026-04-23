@@ -226,10 +226,17 @@ def _compute_correct_response(stimulus: list, trial_type: str) -> list:
     """
     Returns the expected PPST correct response for a given stimulus.
 
-    Correct responses must match the sequence exactly as presented.
-        e.g. ['9', '2', '5']  ->  ['9', '2', '5']
+    Digit-only trials: digits sorted ascending.
+        e.g. ['3', '9', '1', '7']  ->  ['1', '3', '7', '9']
+
+    Mixed trials: digits sorted ascending, then letters sorted A-Z.
+        e.g. ['5', 'R', '2', 'B']  ->  ['2', '5', 'B', 'R']
     """
-    return list(stimulus)
+    if trial_type == 'digit':
+        return sorted(stimulus, key=lambda x: int(x))
+    digits  = sorted([s for s in stimulus if s.isdigit()], key=lambda x: int(x))
+    letters = sorted([s for s in stimulus if not s.isdigit()])
+    return digits + letters
 
 
 # ---------------------------------------------------------------------------
