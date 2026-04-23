@@ -9,11 +9,9 @@ except ImportError:
     pass  # dotenv not installed — set env vars manually
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-secret-key-change-me")
 DEBUG = True
 ALLOWED_HOSTS = []
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -23,7 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "ppst",
 ]
-
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -33,9 +30,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 ROOT_URLCONF = "config.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -51,23 +46,18 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = "config.wsgi.application"
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
 AUTH_PASSWORD_VALIDATORS = []
-
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
-
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
