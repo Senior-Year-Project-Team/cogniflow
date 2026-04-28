@@ -528,6 +528,13 @@ def export_session(request, access_token):
     writer.writerow([])
 
     writer.writerow(["Trial Data"])
+
+    max_clicks = max(
+        (len(row["latencies_ms"].split(",")) for row in report["trial_rows"] if row["latencies_ms"]),
+        default=0,
+    )
+    click_headers = [f"Click {i+1} (ms)" for i in range(max_clicks)]
+
     writer.writerow([
         "Trial Number",
         "Trial Type",
@@ -535,9 +542,11 @@ def export_session(request, access_token):
         "Patient Response",
         "Correct",
         "Latency (ms)",
-        "Latencies (ms)",
+        *click_headers,
     ])
     for row in report["trial_rows"]:
+        clicks = row["latencies_ms"].split(",") if row["latencies_ms"] else []
+        clicks += [""] * (max_clicks - len(clicks))
         writer.writerow([
             row["trial_number"],
             row["trial_type"],
@@ -545,7 +554,7 @@ def export_session(request, access_token):
             row["patient_response"],
             row["correct"],
             row["latency_ms"],
-            row["latencies_ms"],
+            *clicks,
         ])
     writer.writerow([])
 

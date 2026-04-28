@@ -75,9 +75,7 @@
         }
 
         .stimulus-display.hidden {
-            visibility: hidden;
-            border-color: transparent;
-            background: transparent;
+            display: none;
         }
 
         .stimulus-sequence {
@@ -707,10 +705,25 @@
             const grid = document.getElementById('response-grid');
             grid.innerHTML = '';
 
+            // Parametric layout: fit all buttons above the fold without scrolling
+            if (type === 'mixed') {
+                grid.style.gridTemplateColumns = 'repeat(8, 1fr)';
+                grid.style.gap = '8px';
+                grid.style.margin = '15px 0';
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                grid.style.gap = '15px';
+                grid.style.margin = '30px 0';
+            }
+
             symbols.forEach(symbol => {
                 const button = document.createElement('button');
                 button.className = 'response-button';
                 button.textContent = symbol;
+                if (type === 'mixed') {
+                    button.style.padding = '14px 8px';
+                    button.style.fontSize = '1.2rem';
+                }
                 button.onclick = () => selectSymbol(symbol, button);
                 grid.appendChild(button);
             });
